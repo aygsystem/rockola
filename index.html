@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>La Rockola · YouTube</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Courier+Prime:wght@400;700&family=Barlow+Condensed:wght@400;600;700&display=swap">
+<style>
+/* Layout: un mueble de rockola con arco de neón; adentro, la ventana de cartelitos (izq.) y el panel de discos, fila y botonera (der.). Se apila en celular. */
+:root {
+  --room: #140e0c;
+  --wood: #4b2b1d;
+  --wood-hi: #7a4630;
+  --chrome: #cfd3d8;
+  --chrome-lo: #7d838b;
+  --glass: #0d1517;
+  --amber: #ffb347;
+  --red: #e0453a;
+  --teal: #3fb7a8;
+  --paper: #f2ead6;
+  --ink: #2a1c16;
+  --muted: #b9a89a;
+  --f-display: "Shrikhand", "Cooper Black", Georgia, serif;
+  --f-strip: "Courier Prime", "Courier New", monospace;
+  --f-ui: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  background: radial-gradient(ellipse at 50% 0%, #2a1a14 0%, var(--room) 60%) fixed, var(--room);
+  color: var(--paper);
+  font-family: var(--f-ui);
+  font-size: 17px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 40px;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible, label:focus-within { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+.cabinet {
+  max-width: 1040px;
+  margin: 0 auto;
+  background:
+    repeating-linear-gradient(92deg, rgba(0,0,0,.08) 0 3px, transparent 3px 11px),
+    linear-gradient(180deg, var(--wood-hi), var(--wood) 30%, #3a2016);
+  border-radius: 260px 260px 22px 22px / 150px 150px 22px 22px;
+  padding: 30px 26px 26px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.6), inset 0 0 0 6px rgba(0,0,0,.25);
+  position: relative;
+}
+.arch {
+  border-radius: 230px 230px 12px 12px / 120px 120px 12px 12px;
+  border: 6px solid var(--chrome);
+  box-shadow: 0 0 0 3px var(--chrome-lo), 0 0 34px rgba(255,179,71,.35), inset 0 0 40px rgba(255,179,71,.25);
+  background: linear-gradient(180deg, #3b1a12, #1d0f0b);
+  padding: 34px 20px 16px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.arch::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: repeating-conic-gradient(from 0deg at 50% 120%, rgba(255,179,71,.10) 0 6deg, transparent 6deg 12deg);
+  pointer-events: none;
+}
+.marquee {
+  position: relative;
+  font-family: var(--f-display);
+  font-size: clamp(42px, 9vw, 88px);
+  line-height: 1;
+  margin: 0;
+  color: #fff3dd;
+  text-shadow: 0 0 6px var(--amber), 0 0 18px var(--amber), 0 0 42px var(--red);
+  letter-spacing: .01em;
+}
+.tagline {
+  position: relative;
+  margin: 8px 0 0;
+  font-size: 15px;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+.lights { display: flex; justify-content: center; gap: 14px; margin-top: 14px; position: relative; }
+.lights i {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 10px var(--amber);
+  animation: blink 1.6s infinite;
+}
+.lights i:nth-child(even) { animation-delay: .8s; background: var(--red); box-shadow: 0 0 10px var(--red); }
+@keyframes blink { 50% { opacity: .25; } }
+
+.body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 22px;
+  margin-top: 22px;
+}
+.panel {
+  background: var(--glass);
+  border: 4px solid var(--chrome);
+  box-shadow: 0 0 0 2px var(--chrome-lo), inset 0 0 30px rgba(63,183,168,.12);
+  border-radius: 14px;
+  padding: 16px;
+  min-width: 0;
+}
+.panel h2 {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap;
+}
+.panel h2 span { letter-spacing: .08em; color: var(--teal); font-weight: 600; }
+
+/* Cartelitos */
+.strips {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  max-height: 560px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.strip {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  align-items: stretch;
+  text-align: left;
+  border: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: 0 2px 0 rgba(0,0,0,.4);
+  transition: transform .12s ease;
+}
+.strip:hover { transform: translateY(-2px); }
+.strip .code {
+  display: grid; place-items: center;
+  background: var(--red);
+  color: #fff;
+  font-family: var(--f-ui);
+  font-weight: 700;
+  font-size: 20px;
+}
+.strip.user .code { background: var(--teal); }
+.strip .txt {
+  padding: 6px 8px;
+  font-family: var(--f-strip);
+  font-size: 13px;
+  line-height: 1.25;
+  border-top: 3px solid var(--red);
+  border-bottom: 3px solid var(--red);
+  min-width: 0;
+}
+.strip.user .txt { border-color: var(--teal); }
+.strip .t { font-weight: 700; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; }
+.strip .a { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.strip.playing { box-shadow: 0 0 0 3px var(--amber), 0 0 18px var(--amber); }
+.strip .code { position: relative; }
+.strip.queued .code::after { content: ""; position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+
+.drop {
+  margin-top: 12px;
+  border: 2px dashed var(--chrome-lo);
+  border-radius: 10px;
+  padding: 14px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 16px;
+  transition: border-color .15s, background .15s;
+}
+.drop.over { border-color: var(--amber); background: rgba(255,179,71,.08); color: var(--paper); }
+.drop label {
+  display: inline-block;
+  background: var(--teal);
+  color: #062521;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  margin-bottom: 6px;
+}
+.drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+
+/* Tocadiscos */
+.deck { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 14px; align-items: center; }
+.record {
+  width: 120px; height: 120px; border-radius: 50%;
+  background:
+    radial-gradient(circle, var(--amber) 0 14%, #111 14.5% 16%, transparent 16.5%),
+    repeating-radial-gradient(circle, #1b1b1b 0 2px, #0a0a0a 2px 4px);
+  box-shadow: 0 6px 18px rgba(0,0,0,.6), inset 0 0 0 2px #000;
+  position: relative;
+  animation: spin 1.8s linear infinite;
+  animation-play-state: paused;
+}
+.record::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: conic-gradient(from 30deg, transparent 0 40deg, rgba(255,255,255,.12) 55deg, transparent 70deg 210deg, rgba(255,255,255,.08) 225deg, transparent 240deg);
+}
+.record.on { animation-play-state: running; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.now { min-width: 0; }
+.now .lbl { font-size: 13px; letter-spacing: .22em; text-transform: uppercase; color: var(--teal); }
+.now .title { font-family: var(--f-strip); font-weight: 700; font-size: 19px; line-height: 1.2; margin-top: 4px; overflow-wrap: anywhere; }
+.now .artist { color: var(--muted); font-size: 16px; overflow-wrap: anywhere; }
+.time { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; font-size: 14px; color: var(--muted); margin-top: 8px; }
+.bar { height: 8px; border-radius: 4px; background: #23302f; cursor: pointer; overflow: hidden; margin-top: 4px; }
+.bar > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--amber), var(--red)); }
+canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border-radius: 6px; background: #081011; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; align-items: center; }
+.btn {
+  border: 0;
+  background: linear-gradient(180deg, #eef0f2, var(--chrome) 45%, var(--chrome-lo));
+  color: var(--ink);
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  font-size: 15px;
+  padding: 9px 14px;
+  border-radius: 8px;
+  box-shadow: 0 3px 0 #4a4f55;
+}
+.btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #4a4f55; }
+.btn.big { background: linear-gradient(180deg, #ff7b6f, var(--red) 55%, #9c2a22); color: #fff; box-shadow: 0 3px 0 #5e1813; }
+.vol { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 14px; letter-spacing: .1em; text-transform: uppercase; margin-left: auto; }
+.vol input { width: 90px; accent-color: var(--amber); }
+
+/* Botonera */
+.keypad { margin-top: 16px; }
+.screen {
+  font-family: var(--f-ui); font-weight: 700; font-size: 28px;
+  background: #060a0a; color: var(--amber);
+  text-shadow: 0 0 8px var(--amber);
+  border-radius: 6px; padding: 4px 12px; letter-spacing: .3em;
+  display: flex; justify-content: space-between; align-items: center;
+  font-variant-numeric: tabular-nums;
+}
+.screen small { font-size: 13px; letter-spacing: .12em; color: var(--muted); text-shadow: none; font-weight: 600; }
+.keys { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; margin-top: 8px; }
+.keys button {
+  border: 0; border-radius: 6px; padding: 8px 0;
+  background: #1f2a2a; color: var(--paper);
+  font-weight: 700; font-size: 18px;
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,.4);
+}
+.keys button.l { background: #3a1d17; color: #ffd9c2; }
+.keys button:disabled { opacity: .3; cursor: default; }
+
+.queue { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-height: 210px; overflow-y: auto; }
+.queue li {
+  display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 8px; align-items: center;
+  background: #142020; border-radius: 6px; padding: 6px 8px;
+}
+.queue .c { font-weight: 700; color: var(--amber); }
+.queue .n { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: var(--f-strip); font-size: 14px; }
+.queue button { border: 0; background: none; color: var(--muted); font-size: 18px; padding: 0 4px; }
+.queue button:hover { color: var(--red); }
+.empty { color: var(--muted); font-size: 15px; padding: 6px 2px; }
+
+.grill {
+  margin-top: 22px; height: 44px; border-radius: 10px;
+  background: repeating-linear-gradient(90deg, var(--chrome) 0 4px, #2a1810 4px 14px);
+  box-shadow: inset 0 0 0 3px var(--chrome-lo);
+  opacity: .85;
+}
+.toast {
+  position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%) translateY(20px);
+  background: var(--paper); color: var(--ink);
+  font-family: var(--f-strip); font-weight: 700;
+  padding: 10px 16px; border-radius: 6px;
+  box-shadow: 0 8px 30px rgba(0,0,0,.5);
+  opacity: 0; transition: opacity .2s, transform .2s;
+  pointer-events: none; max-width: calc(100% - 32px);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.note { text-align: center; color: var(--muted); font-size: 14px; margin: 16px auto 0; max-width: 60ch; }
+
+@media (max-width: 760px) {
+  .body { grid-template-columns: minmax(0, 1fr); }
+  .cabinet { padding: 20px 12px 16px; border-radius: 140px 140px 16px 16px / 80px 80px 16px 16px; }
+  .arch { border-radius: 120px 120px 10px 10px / 64px 64px 10px 10px; padding-top: 24px; }
+  .strips { max-height: 420px; }
+}
+@media (max-width: 420px) {
+  .strips { grid-template-columns: minmax(0, 1fr); }
+  .deck { grid-template-columns: 88px minmax(0, 1fr); }
+  .record { width: 88px; height: 88px; }
+  .vol { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lights i, .record { animation: none; }
+  .strip, .toast { transition: none; }
+}
+[hidden]{display:none!important}
+</style>
+<style>
+.screenbox { position: relative; width: 100%; aspect-ratio: 16 / 9; max-width: 100%; border-radius: 8px; overflow: hidden; background: #000; box-shadow: inset 0 0 0 2px var(--chrome-lo); }
+.screenbox > div, .screenbox iframe { position: absolute; inset: 0; width: 100%; height: 100%; }
+.screenbox .idle { display: grid; place-items: center; text-align: center; color: var(--muted); padding: 16px; background: radial-gradient(circle at 50% 40%, #1d2a2a, #050808); }
+.now { margin-top: 12px; }
+.adder { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.adder textarea {
+  flex: 1 1 220px; min-width: 0; resize: vertical; min-height: 44px;
+  background: #081011; color: var(--paper); border: 2px solid var(--chrome-lo); border-radius: 8px;
+  padding: 8px 10px; font: 15px/1.3 var(--f-strip);
+}
+.adder textarea:focus { border-color: var(--amber); outline: none; }
+.adder .btns { display: flex; flex-direction: column; gap: 6px; }
+.hint { color: var(--muted); font-size: 14px; margin-top: 8px; }
+.strip { position: relative; }
+.stripwrap { position: relative; }
+.stripwrap .del {
+  position: absolute; top: 3px; right: 3px; border: 0; width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(42,28,22,.75); color: #fff; font-size: 12px; line-height: 22px; padding: 0;
+  opacity: 0; transition: opacity .15s;
+}
+.stripwrap:hover .del, .stripwrap .del:focus-visible { opacity: 1; }
+@media (hover: none) { .stripwrap .del { opacity: .8; } }
+.strip { width: 100%; }
+</style>
+</head>
+<body>
+
+
+<div class="cabinet">
+  <header class="arch">
+    <h1 class="marquee">La Rockola</h1>
+    <p class="tagline">Edición YouTube · Elegí · Marcá · Escuchá</p>
+    <div class="lights" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  </header>
+
+  <div class="body">
+    <section class="panel" aria-labelledby="sel-h">
+      <h2 id="sel-h">Selecciones <span id="count"></span></h2>
+      <div class="strips" id="strips"></div>
+      <div class="adder">
+        <textarea id="links" rows="2" placeholder="Pegá links de YouTube (uno por línea) o escribí qué buscar"></textarea>
+        <div class="btns">
+          <button class="btn big" id="add">Agregar</button>
+          <button class="btn" id="search">Buscar en YouTube</button>
+        </div>
+      </div>
+      <p class="hint">Copiá el link de cualquier video de YouTube y pegalo acá. Si escribís un nombre en vez de un link, "Buscar en YouTube" abre la búsqueda en otra pestaña para que copies el link que quieras. Tu lista queda guardada en este navegador.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="now-h">
+      <h2 id="now-h">Sonando ahora</h2>
+      <div class="screenbox">
+        <div class="idle" id="idle">Marcá un número o tocá ▶ para arrancar</div>
+        <div id="yt"></div>
+      </div>
+      <div class="now">
+        <div class="lbl" id="nowCode">Esperando</div>
+        <div class="title" id="nowTitle">Tocá ▶ para arrancar</div>
+        <div class="artist" id="nowArtist">Tocá un cartelito o usá la botonera</div>
+      </div>
+      <div class="time"><span id="tCur">0:00</span><span id="tDur">0:00</span></div>
+      <div class="bar" id="bar" role="slider" aria-label="Posición" tabindex="0"><div id="barFill"></div></div>
+
+      <div class="controls">
+        <button class="btn big" id="play">▶ Tocar</button>
+        <button class="btn" id="skip">⏭ Siguiente</button>
+        <button class="btn" id="rand">Al azar</button>
+        <label class="vol" for="volume">Vol <input type="range" id="volume" min="0" max="100" step="1" value="80"></label>
+      </div>
+
+      <div class="keypad">
+        <div class="screen"><span id="screen">_ _</span><small>Marcá letra + número</small></div>
+        <div class="keys" id="keys"></div>
+      </div>
+
+      <h2 style="margin-top:18px">En la fila <span id="qCount">0</span></h2>
+      <ul class="queue" id="queue"></ul>
+      <button class="btn" id="clear" style="margin-top:10px">Vaciar fila</button>
+    </section>
+  </div>
+  <div class="grill" aria-hidden="true"></div>
+</div>
+<p class="note">Los temas en rojo son ejemplos para probar; los que agregás vos aparecen en verde. Pasá el mouse sobre un cartelito y tocá ✕ para sacarlo.</p>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const KEY = "rockola-yt-lista";
+  const EXAMPLES = [
+    { id: "fJ9rUzIMcZQ", title: "Bohemian Rhapsody", artist: "Queen", ex: true },
+    { id: "1w7OgIMMRc4", title: "Sweet Child O' Mine", artist: "Guns N' Roses", ex: true },
+    { id: "hTWKbfoikeg", title: "Smells Like Teen Spirit", artist: "Nirvana", ex: true },
+    { id: "kJQP7kiw5Fk", title: "Despacito", artist: "Luis Fonsi ft. Daddy Yankee", ex: true },
+    { id: "ZbZSe6N_BXs", title: "Happy", artist: "Pharrell Williams", ex: true },
+    { id: "dQw4w9WgXcQ", title: "Never Gonna Give You Up", artist: "Rick Astley", ex: true }
+  ];
+  let lib;
+  try { lib = JSON.parse(localStorage.getItem(KEY)) || null; } catch (e) { lib = null; }
+  if (!Array.isArray(lib)) lib = EXAMPLES.slice();
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(lib)); } catch (e) {} };
+
+  let queue = [];        // guarda ids de video
+  let current = null;    // id de video
+  let entry = "";
+  const code = i => String.fromCharCode(65 + Math.floor(i / 6)) + (i % 6 + 1);
+  const idxOf = id => lib.findIndex(s => s.id === id);
+  const byId = id => lib[idxOf(id)];
+
+  let toastT;
+  function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2400); }
+  const fmt = s => !isFinite(s) || !s ? "0:00" : Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0");
+
+  function parseId(str) {
+    str = str.trim(); if (!str) return null;
+    if (/^[\w-]{11}$/.test(str)) return str;
+    try {
+      const u = new URL(str.startsWith("http") ? str : "https://" + str);
+      const h = u.hostname.replace(/^www\.|^m\.|^music\./, "");
+      if (h === "youtu.be") return u.pathname.slice(1, 12) || null;
+      if (h.endsWith("youtube.com") || h.endsWith("youtube-nocookie.com")) {
+        if (u.searchParams.get("v")) return u.searchParams.get("v").slice(0, 11);
+        const m = u.pathname.match(/\/(?:embed|shorts|live|v)\/([\w-]{11})/);
+        if (m) return m[1];
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  async function fetchInfo(s) {
+    try {
+      const r = await fetch("https://noembed.com/embed?url=" + encodeURIComponent("https://www.youtube.com/watch?v=" + s.id));
+      const j = await r.json();
+      if (j.title) { s.title = j.title; s.artist = j.author_name || s.artist; save(); renderAll(); }
+    } catch (e) {}
+  }
+
+  function addFromText() {
+    const txt = $("links").value;
+    const parts = txt.split(/[\s,]+/).filter(Boolean);
+    let added = 0, dup = 0;
+    parts.forEach(p => {
+      const id = parseId(p); if (!id) return;
+      if (idxOf(id) >= 0) { dup++; return; }
+      const s = { id, title: "Video " + id, artist: "YouTube" };
+      lib.push(s); added++; fetchInfo(s);
+    });
+    if (added) {
+      save(); renderAll(); $("links").value = "";
+      toast(added === 1 ? "Se agregó 1 tema" : "Se agregaron " + added + " temas");
+    } else if (dup) toast("Ese tema ya está en la rockola");
+    else if (txt.trim()) toast("No encontré links de YouTube. Probá con \"Buscar en YouTube\".");
+    else toast("Pegá un link de YouTube primero");
+  }
+  $("add").addEventListener("click", addFromText);
+  $("links").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); addFromText(); } });
+  $("search").addEventListener("click", () => {
+    const q = $("links").value.trim();
+    window.open(q && !parseId(q) ? "https://www.youtube.com/results?search_query=" + encodeURIComponent(q) : "https://www.youtube.com/", "_blank", "noopener");
+  });
+
+  function renderStrips() {
+    const box = $("strips"); box.innerHTML = "";
+    lib.forEach((s, i) => {
+      const w = document.createElement("div"); w.className = "stripwrap";
+      const b = document.createElement("button");
+      b.className = "strip" + (s.ex ? "" : " user") + (current === s.id ? " playing" : "") + (queue.includes(s.id) ? " queued" : "");
+      b.innerHTML = `<span class="code">${code(i)}</span><span class="txt"><span class="t"></span><span class="a"></span></span>`;
+      b.querySelector(".t").textContent = s.title;
+      b.querySelector(".a").textContent = s.artist;
+      b.title = "Poner " + s.title;
+      b.addEventListener("click", () => enqueue(s.id));
+      const d = document.createElement("button"); d.className = "del"; d.textContent = "✕"; d.setAttribute("aria-label", "Sacar " + s.title + " de la rockola");
+      d.addEventListener("click", () => { lib.splice(i, 1); queue = queue.filter(q => q !== s.id); save(); renderAll(); toast("Se sacó " + s.title); });
+      w.append(b, d); box.appendChild(w);
+    });
+    if (!lib.length) box.innerHTML = '<p class="empty">La rockola está vacía. Pegá links de YouTube abajo para llenarla.</p>';
+    $("count").textContent = lib.length + (lib.length === 1 ? " tema" : " temas");
+  }
+  function renderQueue() {
+    const ul = $("queue"); ul.innerHTML = "";
+    if (!queue.length) ul.innerHTML = '<li class="empty" style="display:block;background:none">La fila está vacía. Cada tema que elijas se suma acá.</li>';
+    queue.forEach((id, k) => {
+      const s = byId(id); if (!s) return;
+      const li = document.createElement("li");
+      li.innerHTML = `<span class="c">${code(idxOf(id))}</span><span class="n"></span><button aria-label="Sacar de la fila">✕</button>`;
+      li.querySelector(".n").textContent = s.title + " · " + s.artist;
+      li.querySelector("button").addEventListener("click", () => { queue.splice(k, 1); renderAll(); });
+      ul.appendChild(li);
+    });
+    $("qCount").textContent = queue.length;
+  }
+  function renderKeys() {
+    const k = $("keys"); k.innerHTML = "";
+    const letters = Math.max(1, Math.ceil(lib.length / 6));
+    for (let L = 0; L < letters; L++) {
+      const b = document.createElement("button"); b.className = "l"; b.textContent = String.fromCharCode(65 + L);
+      b.addEventListener("click", () => press(b.textContent)); k.appendChild(b);
+    }
+    for (let n = 1; n <= 6; n++) { const b = document.createElement("button"); b.textContent = n; b.addEventListener("click", () => press(String(n))); k.appendChild(b); }
+  }
+  function renderAll() { renderStrips(); renderQueue(); renderKeys(); updateNow(); }
+
+  function press(ch) {
+    if (/[A-Z]/.test(ch)) entry = ch;
+    else if (entry) {
+      const c = entry + ch; entry = "";
+      const i = (c.charCodeAt(0) - 65) * 6 + (+ch - 1);
+      if (i < 0 || i >= lib.length) toast("No hay tema en " + c); else enqueue(lib[i].id);
+    } else toast("Primero marcá una letra");
+    $("screen").textContent = entry ? entry + " _" : "_ _";
+  }
+
+  /* ---------- YouTube ---------- */
+  let player = null, ready = false, playing = false, pendingPlay = false;
+  window.onYouTubeIframeAPIReady = () => {
+    player = new YT.Player("yt", {
+      width: "100%", height: "100%",
+      playerVars: { playsinline: 1, rel: 0, modestbranding: 1 },
+      events: {
+        onReady: () => { ready = true; player.setVolume(+$("volume").value); if (pendingPlay) { pendingPlay = false; playNext(); } },
+        onStateChange: e => {
+          playing = e.data === YT.PlayerState.PLAYING;
+          if (e.data === YT.PlayerState.ENDED) playNext();
+          if (playing) { const d = player.getVideoData && player.getVideoData(); const s = byId(current); if (s && d && d.title && /^Video /.test(s.title)) { s.title = d.title; s.artist = d.author || s.artist; save(); renderStrips(); } }
+          updateNow();
+        },
+        onError: e => {
+          const s = byId(current);
+          toast((s ? s.title : "Este video") + (e.data === 101 || e.data === 150 ? " no se puede ver fuera de YouTube. Paso al siguiente." : " no se pudo reproducir. Paso al siguiente."));
+          setTimeout(playNext, 1200);
+        }
+      }
+    });
+  };
+  const tag = document.createElement("script"); tag.src = "https://www.youtube.com/iframe_api";
+  tag.onerror = () => toast("No pude cargar YouTube. Revisá la conexión.");
+  document.head.appendChild(tag);
+
+  function enqueue(id) {
+    queue.push(id);
+    const s = byId(id);
+    toast(code(idxOf(id)) + " · " + s.title + " a la fila");
+    if (current === null) playNext(); else { renderQueue(); renderStrips(); }
+  }
+  function playNext() {
+    if (!ready) { pendingPlay = true; toast("Cargando YouTube…"); return; }
+    if (!queue.length) {
+      current = null; player.stopVideo(); renderAll(); return;
+    }
+    current = queue.shift();
+    player.loadVideoById(current);
+    renderAll();
+  }
+  function updateNow() {
+    const s = current !== null ? byId(current) : null;
+    $("idle").hidden = !!s;
+    $("nowCode").textContent = s ? "Sonando · " + code(idxOf(current)) : "Esperando";
+    $("nowTitle").textContent = s ? s.title : (queue.length ? "Tocá ▶ para arrancar" : "Elegí un tema");
+    $("nowArtist").textContent = s ? s.artist : "Tocá un cartelito o usá la botonera";
+    $("play").textContent = playing ? "❚❚ Pausa" : "▶ Tocar";
+  }
+
+  setInterval(() => {
+    if (!ready || current === null || !player.getDuration) return;
+    const t = player.getCurrentTime(), d = player.getDuration();
+    $("tCur").textContent = fmt(t); $("tDur").textContent = fmt(d);
+    $("barFill").style.width = (d ? t / d * 100 : 0) + "%";
+  }, 500);
+  $("bar").addEventListener("click", e => {
+    if (!ready || current === null) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    player.seekTo((e.clientX - r.left) / r.width * player.getDuration(), true);
+  });
+  $("bar").addEventListener("keydown", e => {
+    if (!ready || current === null) return;
+    if (e.key === "ArrowRight") player.seekTo(player.getCurrentTime() + 5, true);
+    if (e.key === "ArrowLeft") player.seekTo(Math.max(0, player.getCurrentTime() - 5), true);
+  });
+
+  $("play").addEventListener("click", () => {
+    if (current === null) { if (!queue.length && lib.length) queue.push(lib[Math.floor(Math.random() * lib.length)].id); playNext(); return; }
+    if (!ready) return;
+    if (playing) player.pauseVideo(); else player.playVideo();
+  });
+  $("skip").addEventListener("click", playNext);
+  $("rand").addEventListener("click", () => { if (lib.length) enqueue(lib[Math.floor(Math.random() * lib.length)].id); });
+  $("clear").addEventListener("click", () => { queue = []; renderAll(); toast("Fila vacía"); });
+  $("volume").addEventListener("input", e => { if (ready) player.setVolume(+e.target.value); });
+
+  window.addEventListener("keydown", e => {
+    if (/INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    const k = e.key.toUpperCase();
+    if (/^[A-Z]$/.test(k) && k.charCodeAt(0) - 65 < Math.ceil(lib.length / 6)) press(k);
+    else if (/^[1-6]$/.test(k)) press(k);
+  });
+
+  queue = lib.slice(0, 2).map(s => s.id);
+  renderAll();
+})();
+</script>
+
+</body>
+</html>
