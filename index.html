@@ -333,6 +333,38 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
 .stripwrap:hover .del, .stripwrap .del:focus-visible { opacity: 1; }
 @media (hover: none) { .stripwrap .del { opacity: .8; } }
 .strip { width: 100%; }
+.searchp { grid-column: 1 / -1; }
+.sbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: stretch; }
+.sbar input[type=search], .filter, .keybox input {
+  flex: 1 1 240px; min-width: 0;
+  background: #081011; color: var(--paper); border: 2px solid var(--chrome-lo); border-radius: 8px;
+  padding: 9px 12px; font: 16px var(--f-strip);
+}
+.sbar input:focus, .filter:focus, .keybox input:focus { border-color: var(--amber); outline: none; }
+.modes { display: inline-flex; border: 2px solid var(--chrome-lo); border-radius: 8px; overflow: hidden; }
+.modes button { border: 0; background: #142020; color: var(--muted); padding: 0 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; font-size: 14px; }
+.modes button[aria-pressed="true"] { background: var(--amber); color: var(--ink); }
+.results { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; margin-top: 12px; max-height: 470px; overflow-y: auto; }
+.res { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; background: #142020; border-radius: 8px; padding: 8px; align-items: start; }
+.res img { width: 96px; aspect-ratio: 16/9; object-fit: cover; border-radius: 4px; display: block; }
+.res .rt { font-family: var(--f-strip); font-weight: 700; font-size: 13px; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.res .ra { color: var(--muted); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.res .acts { grid-column: 1 / -1; display: flex; gap: 6px; }
+.res .acts button { flex: 1; border: 0; border-radius: 6px; padding: 6px 4px; font-weight: 700; font-size: 14px; letter-spacing: .04em; text-transform: uppercase; background: #263434; color: var(--paper); }
+.res .acts button.go { background: var(--red); color: #fff; }
+.res .acts button:disabled { opacity: .45; cursor: default; }
+.keybox { margin-top: 12px; background: #142020; border-radius: 8px; padding: 12px 14px; font-size: 15px; line-height: 1.45; }
+.keybox ol { margin: 6px 0 10px; padding-left: 20px; }
+.keybox a { color: var(--amber); }
+.keybox .row { display: flex; gap: 8px; flex-wrap: wrap; }
+.linkbtn { border: 0; background: none; color: var(--muted); text-decoration: underline; font-size: 14px; padding: 0; margin-top: 8px; }
+.ghstate { border: 0; background: none; padding: 0 0 8px; font-size: 14px; letter-spacing: .06em; text-transform: uppercase; font-weight: 600; text-align: left; }
+.ghstate[data-s="ok"] { color: var(--teal); }
+.ghstate[data-s="off"] { color: var(--amber); text-decoration: underline; }
+.ghstate[data-s="busy"] { color: var(--muted); }
+.ghstate[data-s="err"] { color: var(--red); text-decoration: underline; }
+#ghBox { margin: 0 0 12px; }
+.filter { width: 100%; margin-bottom: 10px; font-size: 15px; padding: 7px 10px; }
 </style>
 </head>
 <body>
@@ -346,8 +378,51 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
   </header>
 
   <div class="body">
+    <section class="panel searchp" aria-labelledby="busca-h">
+      <h2 id="busca-h">Buscar temas <span id="sMsg"></span></h2>
+      <form class="sbar" id="sForm">
+        <div class="modes" role="group" aria-label="Buscar por">
+          <button type="button" id="mTema" aria-pressed="true">Tema</button>
+          <button type="button" id="mArtista" aria-pressed="false">Artista</button>
+        </div>
+        <input type="search" id="q" placeholder="Ej: De música ligera" autocomplete="off">
+        <button class="btn big" type="submit">Buscar</button>
+      </form>
+      <div class="keybox" id="keybox" hidden>
+        <strong>Para buscar desde la rockola hace falta una clave gratuita de YouTube (se hace una sola vez):</strong>
+        <ol>
+          <li>Entrá a <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener">YouTube Data API en Google Cloud</a> con tu cuenta de Google, creá un proyecto si te lo pide y tocá <b>Habilitar</b>.</li>
+          <li>Andá a <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Credenciales</a> → <b>Crear credenciales</b> → <b>Clave de API</b> y copiala.</li>
+          <li>Pegala acá abajo. Queda guardada solo en este navegador.</li>
+        </ol>
+        <div class="row">
+          <input type="text" id="keyIn" placeholder="AIza…" autocomplete="off" spellcheck="false">
+          <button class="btn" type="button" id="keySave">Guardar clave</button>
+        </div>
+      </div>
+      <div class="results" id="results"></div>
+      <button class="linkbtn" type="button" id="keyChange" hidden>Cambiar clave de YouTube</button>
+    </section>
+
     <section class="panel" aria-labelledby="sel-h">
       <h2 id="sel-h">Selecciones <span id="count"></span></h2>
+      <button type="button" class="ghstate" id="ghState" data-s="">Cargando lista…</button>
+      <div class="keybox" id="ghBox" hidden>
+        <strong>Para que cada tema quede grabado en tu repo de GitHub (y aparezca en cualquier compu o celular), conectá un token una sola vez:</strong>
+        <ol>
+          <li>Entrá a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">crear token en GitHub</a> con la cuenta dueña del repo.</li>
+          <li>Ponele un nombre (ej. <i>rockola</i>) y en <b>Expiration</b> elegí la duración que quieras.</li>
+          <li>En <b>Repository access</b> elegí <b>Only select repositories</b> y marcá <b>rockola</b>.</li>
+          <li>En <b>Permissions → Repository permissions → Contents</b> elegí <b>Read and write</b>.</li>
+          <li>Tocá <b>Generate token</b>, copialo y pegalo acá. Queda solo en este navegador.</li>
+        </ol>
+        <div class="row">
+          <input type="password" id="tokIn" placeholder="github_pat_…" autocomplete="off" spellcheck="false">
+          <button class="btn" type="button" id="tokSave">Conectar</button>
+        </div>
+        <button class="linkbtn" type="button" id="tokOff">Desconectar este navegador</button>
+      </div>
+      <input type="search" class="filter" id="filter" placeholder="Filtrar mi lista por tema o artista" autocomplete="off">
       <div class="strips" id="strips"></div>
       <div class="adder">
         <textarea id="links" rows="2" placeholder="Pegá links de YouTube (uno por línea) o escribí qué buscar"></textarea>
@@ -410,7 +485,69 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
   let lib;
   try { lib = JSON.parse(localStorage.getItem(KEY)) || null; } catch (e) { lib = null; }
   if (!Array.isArray(lib)) lib = EXAMPLES.slice();
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(lib)); } catch (e) {} };
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(lib)); } catch (e) {} ghSchedule(); };
+
+  /* ---------- Lista grabada en GitHub (lista.json del repo) ---------- */
+  const GH = (() => {
+    const h = location.hostname, seg = location.pathname.split("/").filter(Boolean)[0];
+    if (h.endsWith(".github.io")) return { owner: h.split(".")[0], repo: seg || h };
+    return { owner: "aygsystem", repo: "rockola" };
+  })();
+  const GHFILE = "lista.json";
+  const TKEY = "rockola-gh-token";
+  const ghApi = `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${GHFILE}`;
+  const getTok = () => { try { return localStorage.getItem(TKEY) || ""; } catch (e) { return ""; } };
+  const b64enc = s => btoa(unescape(encodeURIComponent(s)));
+  const b64dec = s => decodeURIComponent(escape(atob(s.replace(/\s/g, ""))));
+  let ghSha = null, ghTimer = null, ghLoaded = false;
+  function ghStatus(txt, cls) { const el = $("ghState"); if (el) { el.textContent = txt; el.dataset.s = cls || ""; } }
+  function ghRefreshStatus() {
+    if (getTok()) ghStatus("✓ Se graba en GitHub", "ok");
+    else ghStatus("Sin conectar · Tocá acá para grabar en GitHub", "off");
+  }
+  async function ghLoad() {
+    const tok = getTok();
+    let data = null;
+    try {
+      const r = await fetch(ghApi + "?t=" + Date.now(), { headers: tok ? { Authorization: "Bearer " + tok } : {} });
+      if (r.ok) { const j = await r.json(); ghSha = j.sha; data = JSON.parse(b64dec(j.content)); }
+      else if (r.status === 404) ghSha = null;
+      else throw new Error(r.status);
+    } catch (e) {
+      try { const r2 = await fetch(GHFILE + "?t=" + Date.now()); if (r2.ok) data = await r2.json(); } catch (e2) {}
+    }
+    ghLoaded = true;
+    if (Array.isArray(data) && data.length) {
+      lib = data.filter(s => s && /^[\w-]{11}$/.test(s.id));
+      try { localStorage.setItem(KEY, JSON.stringify(lib)); } catch (e) {}
+      queue = queue.filter(id => idxOf(id) >= 0);
+      if (!queue.length && current === null) queue = lib.slice(0, 2).map(s => s.id);
+      renderAll();
+    }
+    ghRefreshStatus();
+  }
+  function ghSchedule() {
+    if (!getTok() || !ghLoaded) return;
+    clearTimeout(ghTimer);
+    ghStatus("Grabando…", "busy");
+    ghTimer = setTimeout(() => ghSave(true), 1200);
+  }
+  async function ghSave(retry) {
+    const tok = getTok(); if (!tok) return;
+    const body = { message: "Actualizar lista de la rockola", content: b64enc(JSON.stringify(lib, null, 2) + "\n") };
+    if (ghSha) body.sha = ghSha;
+    try {
+      const r = await fetch(ghApi, { method: "PUT", headers: { Authorization: "Bearer " + tok, "Content-Type": "application/json", Accept: "application/vnd.github+json" }, body: JSON.stringify(body) });
+      if (r.ok) { const j = await r.json(); ghSha = j.content.sha; ghStatus("✓ Grabado en GitHub", "ok"); return; }
+      if ((r.status === 409 || r.status === 422) && retry) {
+        const g = await fetch(ghApi + "?t=" + Date.now(), { headers: { Authorization: "Bearer " + tok } });
+        ghSha = g.ok ? (await g.json()).sha : null;
+        return ghSave(false);
+      }
+      if (r.status === 401 || r.status === 403 || r.status === 404) { ghStatus("No se pudo grabar: revisá el token", "err"); toast("GitHub rechazó el token. Revisá que tenga permiso de escritura en " + GH.repo + "."); return; }
+      throw new Error(r.status);
+    } catch (e) { ghStatus("No se pudo grabar en GitHub", "err"); toast("No se pudo grabar en GitHub. Se reintenta con el próximo cambio."); }
+  }
 
   let queue = [];        // guarda ids de video
   let current = null;    // id de video
@@ -447,6 +584,95 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
     } catch (e) {}
   }
 
+  const norm = t => (t || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+  $("filter").addEventListener("input", renderStrips);
+
+  /* ---------- Buscador ---------- */
+  const KKEY = "rockola-yt-clave";
+  const getKey = () => { try { return localStorage.getItem(KKEY) || ""; } catch (e) { return ""; } };
+  let mode = "tema";
+  const setMode = m => {
+    mode = m;
+    $("mTema").setAttribute("aria-pressed", m === "tema");
+    $("mArtista").setAttribute("aria-pressed", m === "artista");
+    $("q").placeholder = m === "tema" ? "Ej: De música ligera" : "Ej: Soda Stereo";
+    $("q").focus();
+  };
+  $("mTema").addEventListener("click", () => setMode("tema"));
+  $("mArtista").addEventListener("click", () => setMode("artista"));
+  const showKeybox = show => { $("keybox").hidden = !show; $("keyChange").hidden = show || !getKey(); };
+  $("keyChange").addEventListener("click", () => { $("keyIn").value = getKey(); showKeybox(true); });
+  $("keySave").addEventListener("click", () => {
+    const k = $("keyIn").value.trim();
+    if (!/^AIza[\w-]{30,}$/.test(k)) { toast("Esa clave no parece válida. Empieza con AIza…"); return; }
+    try { localStorage.setItem(KKEY, k); } catch (e) {}
+    showKeybox(false); toast("Clave guardada");
+    if ($("q").value.trim()) search();
+  });
+  const decode = s => { const t = document.createElement("textarea"); t.innerHTML = s; return t.value; };
+  let lastResults = [];
+
+  async function search() {
+    const q = $("q").value.trim();
+    if (!q) { toast("Escribí un tema o un artista"); return; }
+    const key = getKey();
+    if (!key) { showKeybox(true); return; }
+    $("sMsg").textContent = "Buscando…";
+    const params = new URLSearchParams({
+      part: "snippet", type: "video", videoEmbeddable: "true", maxResults: mode === "artista" ? "24" : "12",
+      q: mode === "artista" ? q + " canciones" : q, key, regionCode: "AR", relevanceLanguage: "es"
+    });
+    if (mode === "artista") params.set("videoCategoryId", "10");
+    try {
+      const r = await fetch("https://www.googleapis.com/youtube/v3/search?" + params);
+      const j = await r.json();
+      if (j.error) {
+        const reason = (j.error.errors && j.error.errors[0] && j.error.errors[0].reason) || "";
+        if (/keyInvalid|API_KEY_INVALID/.test(reason + j.error.message)) { $("sMsg").textContent = ""; toast("La clave no funciona. Revisala."); showKeybox(true); return; }
+        if (/quota/i.test(reason)) { $("sMsg").textContent = "Se terminó el cupo de hoy"; toast("YouTube corta las búsquedas por hoy. Mañana se renueva."); return; }
+        if (/accessNotConfigured|SERVICE_DISABLED/.test(reason + j.error.message)) { $("sMsg").textContent = ""; toast("Falta habilitar YouTube Data API en Google Cloud (paso 1)."); showKeybox(true); return; }
+        throw new Error(j.error.message);
+      }
+      lastResults = (j.items || []).filter(it => it.id && it.id.videoId).map(it => ({
+        id: it.id.videoId,
+        title: decode(it.snippet.title),
+        artist: decode(it.snippet.channelTitle).replace(/ - Topic$/, ""),
+        thumb: (it.snippet.thumbnails.medium || it.snippet.thumbnails.default || {}).url
+      }));
+      $("sMsg").textContent = lastResults.length ? lastResults.length + " resultados" : "Sin resultados";
+      renderResults();
+    } catch (e) {
+      $("sMsg").textContent = "";
+      toast("No se pudo buscar. Revisá la conexión.");
+    }
+  }
+  $("sForm").addEventListener("submit", e => { e.preventDefault(); search(); });
+
+  function renderResults() {
+    const box = $("results"); box.innerHTML = "";
+    lastResults.forEach(r => {
+      const inLib = idxOf(r.id) >= 0;
+      const d = document.createElement("div"); d.className = "res";
+      d.innerHTML = `<img alt="" loading="lazy"><div style="min-width:0"><div class="rt"></div><div class="ra"></div></div>
+        <div class="acts"><button class="go">▶ A la fila</button><button class="add"></button></div>`;
+      if (r.thumb) d.querySelector("img").src = r.thumb;
+      d.querySelector(".rt").textContent = r.title;
+      d.querySelector(".ra").textContent = r.artist;
+      const add = d.querySelector(".add");
+      add.textContent = inLib ? "✓ Guardado" : "＋ Guardar";
+      add.disabled = inLib;
+      add.addEventListener("click", () => { addSong(r); toast(r.title + " guardado en la rockola"); });
+      d.querySelector(".go").addEventListener("click", () => { addSong(r); enqueue(r.id); });
+      box.appendChild(d);
+    });
+  }
+  function addSong(r) {
+    if (idxOf(r.id) >= 0) return;
+    lib.push({ id: r.id, title: r.title, artist: r.artist });
+    save(); renderAll(); renderResults();
+  }
+  showKeybox(false);
+
   function addFromText() {
     const txt = $("links").value;
     const parts = txt.split(/[\s,]+/).filter(Boolean);
@@ -473,7 +699,9 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
 
   function renderStrips() {
     const box = $("strips"); box.innerHTML = "";
+    const f = norm($("filter").value);
     lib.forEach((s, i) => {
+      if (f && !norm(s.title + " " + s.artist).includes(f)) return;
       const w = document.createElement("div"); w.className = "stripwrap";
       const b = document.createElement("button");
       b.className = "strip" + (s.ex ? "" : " user") + (current === s.id ? " playing" : "") + (queue.includes(s.id) ? " queued" : "");
@@ -486,7 +714,8 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
       d.addEventListener("click", () => { lib.splice(i, 1); queue = queue.filter(q => q !== s.id); save(); renderAll(); toast("Se sacó " + s.title); });
       w.append(b, d); box.appendChild(w);
     });
-    if (!lib.length) box.innerHTML = '<p class="empty">La rockola está vacía. Pegá links de YouTube abajo para llenarla.</p>';
+    if (!lib.length) box.innerHTML = '<p class="empty">La rockola está vacía. Buscá temas arriba o pegá links abajo para llenarla.</p>';
+    else if (!box.children.length) box.innerHTML = '<p class="empty">Ningún tema de tu lista coincide con el filtro.</p>';
     $("count").textContent = lib.length + (lib.length === 1 ? " tema" : " temas");
   }
   function renderQueue() {
@@ -607,8 +836,24 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
     else if (/^[1-6]$/.test(k)) press(k);
   });
 
+  $("ghState").addEventListener("click", () => { $("ghBox").hidden = !$("ghBox").hidden; $("tokOff").hidden = !getTok(); });
+  $("tokSave").addEventListener("click", async () => {
+    const t = $("tokIn").value.trim();
+    if (!/^(github_pat_|ghp_)\w{20,}$/.test(t)) { toast("Ese token no parece válido. Empieza con github_pat_…"); return; }
+    try { localStorage.setItem(TKEY, t); } catch (e) {}
+    $("tokIn").value = ""; $("ghBox").hidden = true;
+    toast("Conectado. Grabando la lista…");
+    const mine = lib.slice();
+    await ghLoad();
+    mine.forEach(s => { if (idxOf(s.id) < 0) lib.push(s); });
+    renderAll();
+    ghSchedule();
+  });
+  $("tokOff").addEventListener("click", () => { try { localStorage.removeItem(TKEY); } catch (e) {} $("ghBox").hidden = true; ghRefreshStatus(); toast("Este navegador ya no graba en GitHub"); });
+
   queue = lib.slice(0, 2).map(s => s.id);
   renderAll();
+  ghLoad();
 })();
 </script>
 
