@@ -543,15 +543,18 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
   }
   async function ghCheck(t) {
     const H = { Authorization: "Bearer " + t, Accept: "application/vnd.github+json" };
-    let login = "";
+    let login = "", codes = "";
     try {
-      const u = await fetch("https://api.github.com/user", { headers: H });
-      if (u.status === 401) return ghExplain(401, "");
+      const u = await fetch("https://api.github.com/user", { headers: H, cache: "no-store" });
+      codes = "usuario " + u.status;
+      if (u.status === 401) return ghExplain(401, "") + " [" + codes + "]";
       if (u.ok) login = (await u.json()).login || "";
-      const r = await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}`, { headers: H });
-      if (r.status === 401) return ghExplain(401, "");
-      if (!r.ok || (login && login.toLowerCase() !== GH.owner.toLowerCase() && !((await r.clone().json()).permissions || {}).push)) {
-        return (login ? "Ese token es de la cuenta \"" + login + "\". " : "") + ghExplain(404, "");
+      const r = await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}?t=${Date.now()}`, { headers: H, cache: "no-store" });
+      codes += ", repo " + r.status;
+      let rj = {}; try { rj = await r.json(); } catch (e) {}
+      if (r.status === 401) return ghExplain(401, "") + " [" + codes + "]";
+      if (!r.ok || (login && login.toLowerCase() !== GH.owner.toLowerCase() && !(rj.permissions || {}).push)) {
+        return (login ? "Ese token es de la cuenta \"" + login + "\". " : "") + ghExplain(r.ok ? 404 : r.status, rj.message || "") + " [" + codes + (rj.message ? ": " + rj.message : "") + "]";
       }
     } catch (e) { return "No pude conectar con GitHub para revisar el token. Fijate la conexión y probá de nuevo."; }
     return "";
@@ -897,7 +900,7 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
 
   $("ghState").addEventListener("click", () => { $("ghBox").hidden = !$("ghBox").hidden; $("tokOff").hidden = !getTok(); });
   $("tokSave").addEventListener("click", async () => {
-    const t = $("tokIn").value.trim();
+    const t = $("tokIn").value.replace(/\s+/g, "");
     if (/^AIza[\w-]{30,}$/.test(t)) {
       try { localStorage.setItem(KKEY, t); } catch (e) {}
       $("tokIn").value = ""; showKeybox(false);
