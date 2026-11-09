@@ -366,6 +366,24 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
 #ghBox { margin: 0 0 12px; }
 .tokmsg { margin: 10px 0 0; padding: 8px 10px; border-radius: 6px; background: rgba(224,69,58,.15); border-left: 3px solid var(--red); color: var(--paper); }
 .rgroup { grid-column: 1 / -1; font-size: 14px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--teal); padding-top: 4px; display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+.cats { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.cat { border: 0; border-radius: 999px; padding: 5px 12px; background: #1f2a2a; color: var(--paper); font-weight: 700; font-size: 14px; letter-spacing: .04em; text-transform: uppercase; display: inline-flex; gap: 6px; align-items: baseline; }
+.cat small { font-size: 12px; opacity: .65; font-variant-numeric: tabular-nums; }
+.cat[aria-pressed="true"] { background: var(--amber); color: var(--ink); }
+.cat.new { background: none; border: 1px dashed var(--chrome-lo); color: var(--muted); }
+.tagbtn { position: absolute; bottom: 4px; right: 4px; border: 0; border-radius: 999px; padding: 1px 7px; font: 700 11px var(--f-ui); letter-spacing: .05em; text-transform: uppercase; background: rgba(42,28,22,.12); color: var(--ink); max-width: 45%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tagbtn.has { background: var(--ink); color: var(--paper); }
+.tagbtn:not(.has) { opacity: 0; transition: opacity .15s; }
+.stripwrap:hover .tagbtn, .tagbtn:focus-visible { opacity: 1; }
+@media (hover: none) { .tagbtn:not(.has) { opacity: .75; } }
+.strip .txt { padding-bottom: 20px; }
+.picker { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: grid; place-items: center; z-index: 20; padding: 16px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.pickcard { background: var(--glass); border: 4px solid var(--chrome); border-radius: 14px; padding: 16px; width: min(460px, 100%); display: grid; gap: 12px; }
+.pickhead { display: flex; justify-content: space-between; gap: 10px; align-items: start; font-family: var(--f-strip); }
+.pickx { border: 0; background: none; color: var(--muted); font-size: 18px; padding: 0 4px; }
+.pickcard .row { display: flex; gap: 8px; }
+.pickcard input { flex: 1; min-width: 0; background: #081011; color: var(--paper); border: 2px solid var(--chrome-lo); border-radius: 8px; padding: 8px 10px; font: 15px var(--f-strip); }
+.pickcard input:focus { border-color: var(--amber); outline: none; }
 .filter { width: 100%; margin-bottom: 10px; font-size: 15px; padding: 7px 10px; }
 </style>
 </head>
@@ -425,6 +443,7 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
         <p class="tokmsg" id="tokMsg" role="alert" hidden></p>
         <button class="linkbtn" type="button" id="tokOff">Desconectar este navegador</button>
       </div>
+      <div class="cats" id="cats" role="group" aria-label="Categorías"></div>
       <input type="search" class="filter" id="filter" placeholder="Filtrar mi lista por tema o artista" autocomplete="off">
       <div class="strips" id="strips"></div>
       <div class="adder">
@@ -470,6 +489,13 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
   <div class="grill" aria-hidden="true"></div>
 </div>
 <p class="note">Los temas en rojo son ejemplos para probar; los que agregás vos aparecen en verde. Pasá el mouse sobre un cartelito y tocá ✕ para sacarlo.</p>
+<div class="picker" id="picker" hidden>
+  <div class="pickcard" role="dialog" aria-modal="true" aria-labelledby="pickTitle">
+    <div class="pickhead"><strong id="pickTitle">Categoría</strong><button type="button" class="pickx" id="pickClose" aria-label="Cerrar">✕</button></div>
+    <div class="cats" id="pickList"></div>
+    <div class="row"><input type="text" id="pickNew" placeholder="Nueva categoría (ej: Cuarteto)" maxlength="24" autocomplete="off"><button class="btn" type="button" id="pickCreate">Crear</button></div>
+  </div>
+</div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -507,15 +533,19 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
     if (getTok()) ghStatus("✓ Se graba en GitHub", "ok");
     else ghStatus("Sin conectar · Tocá acá para grabar en GitHub", "off");
   }
-  let synced = null; // ids tal como están en GitHub la última vez que sincronizamos
+  let synced = null; // cómo estaba cada tema en GitHub la última vez que sincronizamos (id → JSON)
+  const snap = arr => new Map(arr.map(x => [x.id, JSON.stringify(x)]));
   function mergeRemote(remote) {
-    // aplica los cambios locales todavía no grabados (altas y bajas) sobre la lista de GitHub
+    // aplica los cambios locales todavía no grabados (altas, bajas y cambios de categoría) sobre la lista de GitHub
     if (!synced) return remote;
-    const base = new Set(synced), mine = new Set(lib.map(s => s.id));
-    const removed = new Set(synced.filter(id => !mine.has(id)));
-    const out = remote.filter(s => !removed.has(s.id));
-    const have = new Set(out.map(s => s.id));
-    lib.forEach(s => { if (!base.has(s.id) && !have.has(s.id)) { out.push(s); have.add(s.id); } });
+    const mine = new Map(lib.map(x => [x.id, x]));
+    const removed = new Set([...synced.keys()].filter(id => !mine.has(id)));
+    const out = remote.filter(x => !removed.has(x.id)).map(x => {
+      const m = mine.get(x.id);
+      return m && synced.has(x.id) && JSON.stringify(m) !== synced.get(x.id) ? m : x;
+    });
+    const have = new Set(out.map(x => x.id));
+    lib.forEach(x => { if (!synced.has(x.id) && !have.has(x.id)) { out.push(x); have.add(x.id); } });
     return out;
   }
   async function ghFetchRemote() {
@@ -540,7 +570,7 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
         const merged = mergeRemote(remote);
         const changedLocal = JSON.stringify(merged) !== JSON.stringify(lib);
         const needsPush = JSON.stringify(merged) !== JSON.stringify(remote);
-        synced = remote.map(s => s.id);
+        synced = snap(remote);
         if (changedLocal) {
           lib = merged;
           try { localStorage.setItem(KEY, JSON.stringify(lib)); } catch (e) {}
@@ -549,7 +579,7 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
           renderAll(); renderResults();
         }
         if (needsPush) ghSchedule();
-      } else if (res.sha === null) synced = [];
+      } else if (res.sha === null) synced = new Map();
     }
     if (!ghTimer) ghRefreshStatus();
   }
@@ -602,15 +632,16 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
     if (ghSha) body.sha = ghSha;
     try {
       const r = await fetch(ghApi, { method: "PUT", headers: { Authorization: "Bearer " + tok, "Content-Type": "application/json", Accept: "application/vnd.github+json" }, body: JSON.stringify(body) });
-      if (r.ok) { const j = await r.json(); ghSha = j.content.sha; synced = lib.map(s => s.id); ghStatus("✓ Grabado en GitHub", "ok"); $("tokMsg").hidden = true; return; }
+      if (r.ok) { const j = await r.json(); ghSha = j.content.sha; synced = snap(lib); ghStatus("✓ Grabado en GitHub", "ok"); $("tokMsg").hidden = true; return; }
       if ((r.status === 409 || r.status === 422) && retry) {
         // alguien grabó desde otro dispositivo: mezclar con lo de GitHub y volver a grabar
         const res = await ghFetchRemote();
         if (res && res.sha !== undefined) {
           ghSha = res.sha;
           if (Array.isArray(res.data)) {
-            lib = mergeRemote(res.data.filter(x => x && /^[\w-]{11}$/.test(x.id)));
-            synced = res.data.map(x => x.id);
+            const remote = res.data.filter(x => x && /^[\w-]{11}$/.test(x.id));
+            lib = mergeRemote(remote);
+            synced = snap(remote);
             try { localStorage.setItem(KEY, JSON.stringify(lib)); } catch (e) {}
             renderAll(); renderResults();
           }
@@ -774,7 +805,8 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
   }
   function addSong(r) {
     if (idxOf(r.id) >= 0) return;
-    lib.push({ id: r.id, title: r.title, artist: r.artist });
+    const it = { id: r.id, title: r.title, artist: r.artist }; if (realCat()) it.cat = realCat();
+    lib.push(it);
     save(); renderAll(); renderResults();
   }
   showKeybox(false);
@@ -786,7 +818,7 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
     parts.forEach(p => {
       const id = parseId(p); if (!id) return;
       if (idxOf(id) >= 0) { dup++; return; }
-      const s = { id, title: "Video " + id, artist: "YouTube" };
+      const s = { id, title: "Video " + id, artist: "YouTube" }; if (realCat()) s.cat = realCat();
       lib.push(s); added++; fetchInfo(s);
     });
     if (added) {
@@ -799,10 +831,77 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
   $("add").addEventListener("click", addFromText);
   $("links").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); addFromText(); } });
 
+  /* ---------- Categorías ---------- */
+  const DEFAULT_CATS = ["90's", "Reggaetón", "Cumbia", "Salsa", "Lentos", "Rock", "Pop", "Electrónica"];
+  const CKEY = "rockola-categorias-extra", AKEY = "rockola-categoria-activa";
+  const SIN = "Sin categoría", TODOS = "Todos";
+  let extraCats = []; try { extraCats = JSON.parse(localStorage.getItem(CKEY)) || []; } catch (e) {}
+  let activeCat = TODOS; try { activeCat = localStorage.getItem(AKEY) || TODOS; } catch (e) {}
+  function allCats() {
+    const set = [...DEFAULT_CATS];
+    [...extraCats, ...lib.map(x => x.cat).filter(Boolean)].forEach(c => { if (!set.some(d => norm(d) === norm(c))) set.push(c); });
+    return set;
+  }
+  const inCat = (x, c) => c === TODOS || (c === SIN ? !x.cat : x.cat === c);
+  const realCat = () => (activeCat === TODOS || activeCat === SIN) ? undefined : activeCat;
+  function setCat(c) { activeCat = c; try { localStorage.setItem(AKEY, c); } catch (e) {} renderCats(); renderStrips(); }
+  function renderCats() {
+    const box = $("cats"); box.innerHTML = "";
+    const cats = [TODOS, ...allCats()];
+    if (lib.some(x => !x.cat)) cats.push(SIN);
+    if (!cats.includes(activeCat)) activeCat = TODOS;
+    cats.forEach(c => {
+      const n = lib.filter(x => inCat(x, c)).length;
+      const b = document.createElement("button"); b.type = "button"; b.className = "cat";
+      b.setAttribute("aria-pressed", c === activeCat);
+      b.innerHTML = '<span></span><small></small>';
+      b.firstChild.textContent = c; b.lastChild.textContent = n;
+      b.addEventListener("click", () => setCat(c));
+      box.appendChild(b);
+    });
+    const nb = document.createElement("button"); nb.type = "button"; nb.className = "cat new"; nb.textContent = "＋ Nueva";
+    nb.addEventListener("click", () => openPicker(null));
+    box.appendChild(nb);
+  }
+  let pickFor = null;
+  function openPicker(id) {
+    pickFor = id;
+    const s0 = id ? byId(id) : null;
+    $("pickTitle").textContent = s0 ? "Categoría de “" + s0.title + "”" : "Crear una categoría nueva";
+    const box = $("pickList"); box.innerHTML = "";
+    if (s0) {
+      allCats().forEach(c => {
+        const b = document.createElement("button"); b.type = "button"; b.className = "cat"; b.textContent = c;
+        b.setAttribute("aria-pressed", s0.cat === c);
+        b.addEventListener("click", () => assignCat(c));
+        box.appendChild(b);
+      });
+      if (s0.cat) { const q = document.createElement("button"); q.type = "button"; q.className = "cat"; q.textContent = "✕ Quitar categoría"; q.addEventListener("click", () => assignCat(undefined)); box.appendChild(q); }
+    }
+    $("pickNew").value = "";
+    $("picker").hidden = false;
+    (s0 ? box.querySelector("button") : $("pickNew"))?.focus();
+  }
+  function closePicker() { $("picker").hidden = true; pickFor = null; }
+  function assignCat(c) {
+    const x = pickFor && byId(pickFor);
+    if (x) { if (c) x.cat = c; else delete x.cat; save(); renderAll(); toast(c ? x.title + " → " + c : "Se quitó la categoría"); }
+    closePicker();
+  }
+  function createCat() {
+    const c = $("pickNew").value.trim().replace(/\s+/g, " ").slice(0, 24);
+    if (!c) { toast("Escribí el nombre de la categoría"); return; }
+    const existing = allCats().find(d => norm(d) === norm(c));
+    const name = existing || c;
+    if (!existing) { extraCats.push(name); try { localStorage.setItem(CKEY, JSON.stringify(extraCats)); } catch (e) {} }
+    if (pickFor) assignCat(name); else { closePicker(); setCat(name); toast("Categoría " + name + " creada. Lo que guardes ahora va ahí."); }
+  }
+
   function renderStrips() {
     const box = $("strips"); box.innerHTML = "";
     const f = norm($("filter").value);
     lib.forEach((s, i) => {
+      if (!inCat(s, activeCat)) return;
       if (f && !norm(s.title + " " + s.artist).includes(f)) return;
       const w = document.createElement("div"); w.className = "stripwrap";
       const b = document.createElement("button");
@@ -814,10 +913,15 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
       b.addEventListener("click", () => enqueue(s.id));
       const d = document.createElement("button"); d.className = "del"; d.textContent = "✕"; d.setAttribute("aria-label", "Sacar " + s.title + " de la rockola");
       d.addEventListener("click", () => { lib.splice(i, 1); queue = queue.filter(q => q !== s.id); save(); renderAll(); toast("Se sacó " + s.title); });
-      w.append(b, d); box.appendChild(w);
+      const tg = document.createElement("button"); tg.className = "tagbtn" + (s.cat ? " has" : ""); tg.textContent = s.cat || "＋ categoría";
+      tg.setAttribute("aria-label", "Cambiar categoría de " + s.title);
+      tg.addEventListener("click", () => openPicker(s.id));
+      w.append(b, d, tg); box.appendChild(w);
     });
     if (!lib.length) box.innerHTML = '<p class="empty">La rockola está vacía. Buscá temas arriba o pegá links abajo para llenarla.</p>';
-    else if (!box.children.length) box.innerHTML = '<p class="empty">Ningún tema de tu lista coincide con el filtro.</p>';
+    else if (!box.children.length) box.innerHTML = activeCat !== TODOS && !lib.some(x => inCat(x, activeCat))
+      ? '<p class="empty">Todavía no hay temas en ' + activeCat.replace(/</g, "&lt;") + '. Buscá arriba y tocá Guardar: van directo a esta categoría.</p>'
+      : '<p class="empty">Ningún tema coincide con el filtro.</p>';
     $("count").textContent = lib.length + (lib.length === 1 ? " tema" : " temas");
   }
   function renderQueue() {
@@ -842,7 +946,7 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
     }
     for (let n = 1; n <= 6; n++) { const b = document.createElement("button"); b.textContent = n; b.addEventListener("click", () => press(String(n))); k.appendChild(b); }
   }
-  function renderAll() { renderStrips(); renderQueue(); renderKeys(); updateNow(); }
+  function renderAll() { renderCats(); renderStrips(); renderQueue(); renderKeys(); updateNow(); }
 
   function press(ch) {
     if (/[A-Z]/.test(ch)) entry = ch;
@@ -927,7 +1031,14 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
     if (playing) player.pauseVideo(); else player.playVideo();
   });
   $("skip").addEventListener("click", playNext);
-  $("rand").addEventListener("click", () => { if (lib.length) enqueue(lib[Math.floor(Math.random() * lib.length)].id); });
+  $("rand").addEventListener("click", () => {
+    const pool = lib.filter(x => inCat(x, activeCat));
+    if (pool.length) enqueue(pool[Math.floor(Math.random() * pool.length)].id); else toast("No hay temas en esta categoría");
+  });
+  $("pickClose").addEventListener("click", closePicker);
+  $("picker").addEventListener("click", e => { if (e.target === $("picker")) closePicker(); });
+  $("pickCreate").addEventListener("click", createCat);
+  $("pickNew").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); createCat(); } if (e.key === "Escape") closePicker(); });
   $("clear").addEventListener("click", () => { queue = []; renderAll(); toast("Fila vacía"); });
   $("volume").addEventListener("input", e => { if (ready) player.setVolume(+e.target.value); });
 
