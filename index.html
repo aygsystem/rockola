@@ -421,6 +421,60 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
 .install { position: fixed; right: max(12px, env(safe-area-inset-right, 0px)); top: calc(12px + env(safe-area-inset-top, 0px)); z-index: 16; border: 0; border-radius: 999px; padding: 8px 14px; background: var(--teal); color: #062521; font-weight: 700; letter-spacing: .04em; box-shadow: 0 6px 18px rgba(0,0,0,.4); }
 @media (min-width: 761px) { .mini { display: none !important; } }
 @media (max-width: 760px) { body.has-mini { padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px)); } .toast { bottom: calc(86px + env(safe-area-inset-bottom, 0px)); } }
+.tvbtn { position: fixed; left: max(12px, env(safe-area-inset-left, 0px)); top: calc(12px + env(safe-area-inset-top, 0px)); z-index: 16; border: 0; border-radius: 999px; padding: 8px 14px; background: rgba(20,14,12,.8); color: var(--amber); border: 1px solid var(--chrome-lo); font-weight: 700; letter-spacing: .04em; }
+@media (max-width: 760px) { .tvbtn { display: none; } }
+/* ---------- Modo TV ---------- */
+body.tv { font-size: 20px; padding-block: 18px; }
+body.tv .notv, body.tv .searchp, body.tv .mini, body.tv .install { display: none !important; }
+body.tv .tvbtn { display: block; top: 14px; left: 14px; font-size: 16px; }
+body.tv .cabinet { max-width: none; border-radius: 40px; padding: 18px 22px 22px; }
+body.tv .arch { border-radius: 24px; padding: 10px 20px 8px; display: flex; align-items: center; justify-content: center; gap: 28px; }
+body.tv .marquee { font-size: 54px; }
+body.tv .tagline, body.tv .lights { margin: 0; }
+body.tv .grill { display: none; }
+body.tv .body { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); align-items: start; margin-top: 16px; }
+body.tv #nowPanel { grid-column: 1; grid-row: 1; }
+body.tv .selp { grid-column: 2; grid-row: 1; max-height: calc(100vh - 150px); display: flex; flex-direction: column; }
+body.tv .selp .strips { max-height: none; flex: 1; min-height: 200px; }
+body.tv .strip .txt { font-size: 17px; }
+body.tv .strip .code { font-size: 26px; }
+body.tv .strip { grid-template-columns: 60px minmax(0, 1fr); }
+body.tv .now .title { font-size: 28px; }
+body.tv .now .artist { font-size: 22px; }
+body.tv .btn { font-size: 20px; padding: 12px 20px; }
+body.tv .keys button { font-size: 24px; padding: 12px 0; }
+body.tv .queue { max-height: 260px; }
+body.tv .queue .n { font-size: 18px; }
+body.tv .cat { font-size: 17px; padding: 7px 14px; }
+body.tv .abc button { font-size: 18px; padding: 8px 0; }
+body.tv .sel select { font-size: 18px; }
+body.tv .tagbtn, body.tv .stripwrap .del { display: none; }
+body.tv :focus { outline: none; }
+body.tv :focus-visible, body.tv .tvfocus { outline: 4px solid var(--amber) !important; outline-offset: 3px; box-shadow: 0 0 0 8px rgba(255,179,71,.25), 0 0 30px rgba(255,179,71,.5) !important; position: relative; z-index: 2; }
+body.tv .strip:focus-visible { transform: scale(1.04); }
+body.tv .screenbox { box-shadow: inset 0 0 0 3px var(--chrome-lo), 0 0 40px rgba(0,0,0,.6); }
+body.tv .tvhelp { display: block; }
+body.tv .screenbox { width: auto; height: min(50vh, 46vw * 9 / 16); aspect-ratio: 16 / 9; margin: 0 auto; }
+body.tv .lower { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+body.tv .lower .qbox h2 { margin-top: 16px !important; }
+body.tv .lower .queue { max-height: 190px; }
+body.tv .selp > * { flex: none; }
+body.tv .selp > .strips { flex: 1 1 auto; overflow-y: auto; }
+body.tv .filter { height: auto; }
+.tvhelp { display: none; color: var(--muted); font-size: 16px; margin-top: 10px; }
+.phonebox { display: none; gap: 16px; align-items: center; background: #142020; border-radius: 10px; padding: 12px; margin-top: 12px; }
+.phonebox.open, body.tv .phonebox { display: flex; }
+.phonebox .qr { background: #fff; padding: 8px; border-radius: 6px; flex: none; width: 136px; height: 136px; }
+.phonebox .qr img, .phonebox .qr canvas { width: 120px !important; height: 120px !important; display: block; }
+.phonebox .ptxt { display: grid; gap: 4px; min-width: 0; font-size: 15px; color: var(--muted); }
+.phonebox strong { color: var(--paper); font-size: 18px; }
+.phonebox .plink { font-family: var(--f-strip); color: var(--amber); overflow-wrap: anywhere; font-size: 14px; }
+body.tv .phonebox .ptxt { font-size: 18px; }
+body.tv .phonebox strong { font-size: 22px; }
+body.remote .screenbox, body.remote .time, body.remote .bar, body.remote .tvbtn, body.remote #phoneBtn, body.remote .phonebox, body.remote .install { display: none !important; }
+body.remote .stripwrap .del, body.remote .tagbtn, body.remote .notv, body.remote .ghstate, body.remote #ghBox, body.remote .res .add, body.remote .cat.new { display: none !important; }
+.remotebar { display: none; }
+body.remote .remotebar { display: block; background: var(--teal); color: #062521; font-weight: 700; text-align: center; padding: 8px 12px; border-radius: 10px; margin-bottom: 14px; letter-spacing: .03em; }
 .filter { width: 100%; margin-bottom: 10px; font-size: 15px; padding: 7px 10px; }
 </style>
 </head>
@@ -428,6 +482,7 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
 
 
 <div class="cabinet">
+  <div class="remotebar" id="remoteBar">📺 Control de la tele · lo que elijas suena allá</div>
   <header class="arch">
     <h1 class="marquee">La Rockola</h1>
     <p class="tagline">Edición YouTube · Elegí · Marcá · Escuchá</p>
@@ -461,7 +516,7 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
       <button class="linkbtn" type="button" id="keyChange" hidden>Cambiar clave de YouTube</button>
     </section>
 
-    <section class="panel" aria-labelledby="sel-h">
+    <section class="panel selp" aria-labelledby="sel-h">
       <h2 id="sel-h">Selecciones <span id="count"></span></h2>
       <button type="button" class="ghstate" id="ghState" data-s="">Cargando lista…</button>
       <div class="keybox" id="ghBox" hidden>
@@ -492,13 +547,13 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
       <div class="abc" id="abc" role="group" aria-label="Letra inicial"></div>
       <input type="search" class="filter" id="filter" placeholder="Filtrar mi lista por tema o artista" autocomplete="off">
       <div class="strips" id="strips"></div>
-      <div class="adder">
+      <div class="adder notv">
         <textarea id="links" rows="2" placeholder="¿Tenés un link de YouTube? Pegalo acá (uno por línea)"></textarea>
         <div class="btns">
           <button class="btn big" id="add">Agregar</button>
         </div>
       </div>
-      <p class="hint">Para buscar por tema o artista usá el buscador de arriba. Acá podés pegar un link directo si ya lo tenés.</p>
+      <p class="hint notv">Para buscar por tema o artista usá el buscador de arriba. Acá podés pegar un link directo si ya lo tenés.</p>
     </section>
 
     <section class="panel" aria-labelledby="now-h" id="nowPanel">
@@ -519,22 +574,36 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
         <button class="btn big" id="play">▶ Tocar</button>
         <button class="btn" id="skip">⏭ Siguiente</button>
         <button class="btn" id="rand">Al azar</button>
+        <button class="btn notv" id="phoneBtn" type="button">📱 Celulares</button>
         <label class="vol" for="volume">Vol <input type="range" id="volume" min="0" max="100" step="1" value="80"></label>
       </div>
 
+      <div class="phonebox" id="phoneBox">
+        <div class="qr" id="qr" aria-hidden="true"></div>
+        <div class="ptxt">
+          <strong>📱 Pedí temas desde tu celu</strong>
+          <span>Escaneá el código con la cámara del celular, elegí un tema y llega a la fila de la tele.</span>
+          <span class="plink" id="phoneLink"></span>
+        </div>
+      </div>
+      <p class="tvhelp">Control remoto: flechas para moverte · OK para elegir · ⏯ pausa · ⏭ siguiente · números para marcar el código</p>
+      <div class="lower">
       <div class="keypad">
         <div class="screen"><span id="screen">_ _</span><small>Marcá letra + número</small></div>
         <div class="keys" id="keys"></div>
       </div>
 
+      <div class="qbox">
       <h2 style="margin-top:18px">En la fila <span id="qCount">0</span></h2>
       <ul class="queue" id="queue"></ul>
       <button class="btn" id="clear" style="margin-top:10px">Vaciar fila</button>
+      </div>
+      </div>
     </section>
   </div>
   <div class="grill" aria-hidden="true"></div>
 </div>
-<p class="note">Los temas en rojo son ejemplos para probar; los que agregás vos aparecen en verde. Pasá el mouse sobre un cartelito y tocá ✕ para sacarlo.</p>
+<p class="note notv">Los temas en rojo son ejemplos para probar; los que agregás vos aparecen en verde. Pasá el mouse sobre un cartelito y tocá ✕ para sacarlo.</p>
 <div class="picker" id="picker" hidden>
   <div class="pickcard" role="dialog" aria-modal="true" aria-labelledby="pickTitle">
     <div class="pickhead"><strong id="pickTitle">Categoría</strong><button type="button" class="pickx" id="pickClose" aria-label="Cerrar">✕</button></div>
@@ -558,6 +627,7 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
   <button type="button" class="mini-btn" id="miniSkip" aria-label="Siguiente">⏭</button>
 </div>
 <button type="button" class="install" id="installBtn" hidden>📲 Instalar la app</button>
+<button type="button" class="tvbtn" id="tvBtn">📺 Modo TV</button>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -639,6 +709,7 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
           queue = queue.filter(id => idxOf(id) >= 0);
           if (!queue.length && current === null) queue = lib.slice(0, 2).map(s => s.id);
           renderAll(); renderResults();
+          if (typeof tvFocusStart === "function") tvFocusStart();
         }
         if (needsPush) ghSchedule();
       } else if (res.sha === null) synced = new Map();
@@ -726,7 +797,13 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
   const per = () => lib.length <= 156 ? 6 : lib.length <= 234 ? 9 : 99;
   const code = i => String.fromCharCode(65 + Math.floor(i / per())) + (i % per() + 1);
   const idxOf = id => lib.findIndex(s => s.id === id);
-  const byId = id => lib[idxOf(id)];
+  const guest = new Map(); // temas pedidos desde un celular que no están guardados en la rockola
+  const byId = id => lib[idxOf(id)] || guest.get(id);
+  const codeOf = id => { const i = idxOf(id); return i >= 0 ? code(i) : "★"; };
+  const SALA = (new URLSearchParams(location.search).get("sala") || "").toLowerCase();
+  const REMOTE = /^[a-z0-9]{6,12}$/.test(SALA);
+  const NTFY = window.ROCKOLA_NTFY || "https://ntfy.sh";
+  let remoteState = null;
 
   let toastT;
   function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2400); }
@@ -838,7 +915,7 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
     d.innerHTML = `<img alt="" loading="lazy"><div style="min-width:0"><div class="rt"></div><div class="ra"></div></div>
       <div class="acts"><button class="go">▶ A la fila</button><button class="add"></button></div>`;
     const im = d.querySelector("img"); im.onerror = () => { im.style.visibility = "hidden"; }; im.src = r.thumb || thumbOf(r.id);
-    d.querySelector(".rt").textContent = (local ? code(idxOf(r.id)) + " · " : "") + r.title;
+    d.querySelector(".rt").textContent = (local ? codeOf(r.id) + " · " : "") + r.title;
     d.querySelector(".ra").textContent = r.artist;
     const add = d.querySelector(".add");
     add.textContent = inLib ? "✓ En la rockola" : "＋ Guardar";
@@ -908,7 +985,7 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
   }
   const inCat = (x, c) => c === TODOS || (c === SIN ? !x.cat : x.cat === c);
   const realCat = () => (activeCat === TODOS || activeCat === SIN) ? undefined : activeCat;
-  function setCat(c) { activeCat = c; try { localStorage.setItem(AKEY, c); } catch (e) {} renderCats(); renderStrips(); }
+  function setCat(c) { activeCat = c; try { localStorage.setItem(AKEY, c); } catch (e) {} keepFocus(() => { renderCats(); renderStrips(); }); }
   function renderCats() {
     const box = $("cats"); box.innerHTML = "";
     const cats = [TODOS, ...allCats()];
@@ -917,7 +994,7 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
     cats.forEach(c => {
       const n = lib.filter(x => inCat(x, c)).length;
       const b = document.createElement("button"); b.type = "button"; b.className = "cat";
-      b.setAttribute("aria-pressed", c === activeCat);
+      b.setAttribute("aria-pressed", c === activeCat); b.dataset.fk = "c:" + c;
       b.innerHTML = '<span></span><small></small>';
       b.firstChild.textContent = c; b.lastChild.textContent = n;
       b.addEventListener("click", () => setCat(c));
@@ -998,14 +1075,14 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
     const box = $("abc"); box.innerHTML = "";
     const have = new Set(pool.map(letterOf));
     if (letter && !have.has(letter)) letter = "";
-    const all = document.createElement("button"); all.type = "button"; all.className = "all"; all.textContent = "Todas";
-    all.setAttribute("aria-pressed", !letter); all.addEventListener("click", () => { letter = ""; renderStrips(); });
+    const all = document.createElement("button"); all.type = "button"; all.className = "all"; all.textContent = "Todas"; all.dataset.fk = "l:*";
+    all.setAttribute("aria-pressed", !letter); all.addEventListener("click", () => { letter = ""; keepFocus(renderStrips); });
     box.appendChild(all);
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split("").forEach(L => {
       const b = document.createElement("button"); b.type = "button"; b.textContent = L;
-      b.disabled = !have.has(L); b.setAttribute("aria-pressed", letter === L);
+      b.disabled = !have.has(L); b.setAttribute("aria-pressed", letter === L); b.dataset.fk = "l:" + L;
       b.title = (sortBy === "title" ? "Temas" : "Artistas") + " que empiezan con " + L;
-      b.addEventListener("click", () => { letter = letter === L ? "" : L; renderStrips(); });
+      b.addEventListener("click", () => { letter = letter === L ? "" : L; keepFocus(renderStrips); });
       box.appendChild(b);
     });
   }
@@ -1031,7 +1108,7 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
       b.innerHTML = `<span class="code">${code(i)}</span><span class="txt"><span class="t"></span><span class="a"></span></span>`;
       b.querySelector(".t").textContent = s.title;
       b.querySelector(".a").textContent = s.artist;
-      b.title = "Poner " + s.title;
+      b.title = "Poner " + s.title; b.dataset.fk = "s:" + s.id;
       b.addEventListener("click", () => enqueue(s.id));
       const d = document.createElement("button"); d.className = "del"; d.textContent = "✕"; d.setAttribute("aria-label", "Sacar " + s.title + " de la rockola");
       d.addEventListener("click", () => { lib.splice(i, 1); queue = queue.filter(q => q !== s.id); save(); renderAll(); toast("Se sacó " + s.title); });
@@ -1047,12 +1124,14 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
     $("count").textContent = lib.length + (lib.length === 1 ? " tema" : " temas");
   }
   function renderQueue() {
+    if (REMOTE) return renderQueueRemote();
+    publishStateSoon();
     const ul = $("queue"); ul.innerHTML = "";
     if (!queue.length) ul.innerHTML = '<li class="empty" style="display:block;background:none">La fila está vacía. Cada tema que elijas se suma acá.</li>';
     queue.forEach((id, k) => {
       const s = byId(id); if (!s) return;
       const li = document.createElement("li");
-      li.innerHTML = `<span class="c">${code(idxOf(id))}</span><span class="n"></span><button aria-label="Sacar de la fila">✕</button>`;
+      li.innerHTML = `<span class="c">${codeOf(id)}</span><span class="n"></span><button aria-label="Sacar de la fila">✕</button>`;
       li.querySelector(".n").textContent = s.title + " · " + s.artist;
       li.querySelector("button").addEventListener("click", () => { queue.splice(k, 1); renderAll(); });
       ul.appendChild(li);
@@ -1063,14 +1142,22 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
     const k = $("keys"); k.innerHTML = "";
     const P = per(), letters = Math.min(26, Math.max(1, Math.ceil(lib.length / P)));
     for (let L = 0; L < letters; L++) {
-      const b = document.createElement("button"); b.className = "l"; b.textContent = String.fromCharCode(65 + L);
+      const b = document.createElement("button"); b.className = "l"; b.textContent = String.fromCharCode(65 + L); b.dataset.fk = "k:" + b.textContent;
       b.addEventListener("click", () => press(b.textContent)); k.appendChild(b);
     }
     const digits = P === 6 ? "123456" : P === 9 ? "123456789" : "1234567890";
-    digits.split("").forEach(n => { const b = document.createElement("button"); b.textContent = n; b.addEventListener("click", () => press(n)); k.appendChild(b); });
+    digits.split("").forEach(n => { const b = document.createElement("button"); b.textContent = n; b.dataset.fk = "k:" + n; b.addEventListener("click", () => press(n)); k.appendChild(b); });
     if (P === 99) { const ok = document.createElement("button"); ok.className = "l"; ok.textContent = "OK"; ok.addEventListener("click", () => press("OK")); k.appendChild(ok); }
   }
-  function renderAll() { renderCats(); renderStrips(); renderQueue(); renderKeys(); updateNow(); }
+  function keepFocus(fn) {
+    const a = document.activeElement, k = a && a.dataset && a.dataset.fk;
+    fn();
+    if (k && (!document.activeElement || document.activeElement === document.body)) {
+      const el = document.querySelector('[data-fk="' + CSS.escape(k) + '"]');
+      if (el && !el.disabled) el.focus({ preventScroll: true });
+    }
+  }
+  function renderAll() { keepFocus(() => { renderCats(); renderStrips(); renderQueue(); renderKeys(); updateNow(); }); }
 
   function press(ch) {
     const P = per();
@@ -1114,18 +1201,26 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
       }
     });
   };
-  const tag = document.createElement("script"); tag.src = "https://www.youtube.com/iframe_api";
-  tag.onerror = () => toast("No pude cargar YouTube. Revisá la conexión.");
-  document.head.appendChild(tag);
+  if (!REMOTE) {
+    const tag = document.createElement("script"); tag.src = "https://www.youtube.com/iframe_api";
+    tag.onerror = () => toast("No pude cargar YouTube. Revisá la conexión.");
+    document.head.appendChild(tag);
+  }
 
   function enqueue(id) {
+    if (REMOTE) {
+      const s0 = byId(id); if (!s0) return;
+      sendCmd({ t: "add", id, title: s0.title, artist: s0.artist });
+      toast("📺 Mandado a la tele: " + s0.title);
+      return;
+    }
     queue.push(id);
     const s = byId(id);
-    toast(code(idxOf(id)) + " · " + s.title + " a la fila");
-    if (current === null) playNext(); else { renderQueue(); renderStrips(); }
+    toast(codeOf(id) + " · " + s.title + " a la fila");
+    if (current === null) playNext(); else keepFocus(() => { renderQueue(); renderStrips(); });
   }
   function playNext() {
-    if (!ready) { pendingPlay = true; renderQueue(); renderStrips(); updateNow(); toast("Cargando YouTube…"); return; }
+    if (!ready) { pendingPlay = true; keepFocus(() => { renderQueue(); renderStrips(); updateNow(); }); toast("Cargando YouTube…"); return; }
     if (!queue.length) {
       current = null; player.stopVideo(); renderAll(); return;
     }
@@ -1134,15 +1229,17 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
     renderAll();
   }
   function updateNow() {
+    if (REMOTE) return updateNowRemote();
+    publishStateSoon();
     const s = current !== null ? byId(current) : null;
     $("idle").hidden = !!s;
-    $("nowCode").textContent = s ? "Sonando · " + code(idxOf(current)) : "Esperando";
+    $("nowCode").textContent = s ? "Sonando · " + codeOf(current) : "Esperando";
     $("nowTitle").textContent = s ? s.title : (queue.length ? "Tocá ▶ para arrancar" : "Elegí un tema");
     $("nowArtist").textContent = s ? s.artist : "Tocá un cartelito o usá la botonera";
     $("play").textContent = playing ? "❚❚ Pausa" : "▶ Tocar";
     const showMini = !!s || queue.length > 0;
     $("mini").hidden = !showMini; document.body.classList.toggle("has-mini", showMini);
-    $("miniCode").textContent = s ? code(idxOf(current)) : "▶";
+    $("miniCode").textContent = s ? codeOf(current) : "▶";
     $("miniTitle").textContent = s ? s.title : "Tocá ▶ para arrancar";
     $("miniArtist").textContent = s ? s.artist : queue.length + (queue.length === 1 ? " tema en la fila" : " temas en la fila");
     $("miniPlay").textContent = playing ? "❚❚" : "▶";
@@ -1150,6 +1247,166 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
   $("miniPlay").addEventListener("click", () => $("play").click());
   $("miniSkip").addEventListener("click", () => $("skip").click());
   $("miniInfo").addEventListener("click", () => $("nowPanel").scrollIntoView({ behavior: "smooth", block: "start" }));
+
+  /* ---------- Celulares ↔ tele (vía ntfy.sh) ---------- */
+  const RKEY = "rockola-sala";
+  let room = REMOTE ? SALA : "";
+  if (!REMOTE) {
+    try { room = localStorage.getItem(RKEY) || ""; } catch (e) {}
+    if (!/^[a-z0-9]{8}$/.test(room)) {
+      room = Array.from(crypto.getRandomValues(new Uint8Array(8)), b => "abcdefghjkmnpqrstuvwxyz23456789"[b % 31]).join("");
+      try { localStorage.setItem(RKEY, room); } catch (e) {}
+    }
+  }
+  const topicCmd = "rockola-" + room, topicTv = "rockola-" + room + "-tv";
+  function publish(topic, obj) {
+    return fetch(NTFY + "/" + topic, { method: "POST", body: JSON.stringify(obj) }).catch(() => {});
+  }
+  function listen(topic, onMsg, onOpen) {
+    let es, retry = 1000;
+    const connect = () => {
+      try { es = new EventSource(NTFY + "/" + topic + "/sse"); } catch (e) { return; }
+      es.onopen = () => { retry = 1000; onOpen && onOpen(); };
+      es.onmessage = ev => {
+        try { const d = JSON.parse(ev.data); if (d.event && d.event !== "message") return; onMsg(JSON.parse(d.message)); } catch (e) {}
+      };
+      es.onerror = () => { es.close(); setTimeout(connect, retry); retry = Math.min(retry * 2, 30000); };
+    };
+    connect();
+  }
+  function sendCmd(obj) { publish(topicCmd, obj); }
+
+  // En la tele: escuchar pedidos y avisar qué suena
+  let lastState = "", stateTimer = null;
+  function publishStateSoon() {
+    if (REMOTE) return;
+    clearTimeout(stateTimer);
+    stateTimer = setTimeout(() => {
+      const cur = current !== null ? byId(current) : null;
+      const st = { t: "state", playing, now: cur ? { code: codeOf(current), title: cur.title, artist: cur.artist } : null,
+        queue: queue.slice(0, 15).map(id => { const x = byId(id) || {}; return { code: codeOf(id), title: x.title || "", artist: x.artist || "" }; }), more: Math.max(0, queue.length - 15) };
+      const j = JSON.stringify(st);
+      if (j === lastState) return;
+      lastState = j; publish(topicTv, st);
+    }, 1500);
+  }
+  if (!REMOTE) {
+    listen(topicCmd, m => {
+      if (m.t === "add" && /^[\w-]{11}$/.test(m.id || "")) {
+        if (!byId(m.id)) guest.set(m.id, { id: m.id, title: String(m.title || "Tema").slice(0, 150), artist: String(m.artist || "").slice(0, 100) });
+        const x = byId(m.id);
+        queue.push(m.id);
+        toast("📱 Pidieron: " + x.title);
+        if (current === null) playNext(); else keepFocus(() => { renderQueue(); renderStrips(); });
+      } else if (m.t === "toggle") $("play").click();
+      else if (m.t === "skip") playNext();
+      else if (m.t === "clear") { queue = []; renderAll(); }
+      else if (m.t === "hello") { lastState = ""; publishStateSoon(); }
+    });
+    const link = location.origin + location.pathname + "?sala=" + room;
+    $("phoneLink").textContent = link.replace(/^https?:\/\//, "");
+    let qrDone = false;
+    const drawQR = () => {
+      if (qrDone) return; qrDone = true;
+      const sc = document.createElement("script");
+      sc.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
+      sc.onload = () => { try { new QRCode($("qr"), { text: link, width: 240, height: 240, correctLevel: QRCode.CorrectLevel.M }); } catch (e) {} };
+      document.head.appendChild(sc);
+    };
+    $("phoneBtn").addEventListener("click", () => { $("phoneBox").classList.toggle("open"); drawQR(); });
+    if (document.body.classList.contains("tv") || /[?&]tv\b/.test(location.search)) drawQR();
+    window.__rockolaDrawQR = drawQR;
+  }
+
+  // En el celular: mandar pedidos y mostrar lo que suena en la tele
+  function updateNowRemote() {
+    const st = remoteState, n = st && st.now;
+    $("idle").hidden = true;
+    $("nowCode").textContent = st ? (n ? "Sonando en la tele · " + n.code : "La tele está esperando") : "Conectando con la tele…";
+    $("nowTitle").textContent = n ? n.title : "Elegí un tema";
+    $("nowArtist").textContent = n ? n.artist : "Tocá un cartelito y se suma a la fila de la tele";
+    $("play").textContent = st && st.playing ? "❚❚ Pausa" : "▶ Tocar";
+    $("mini").hidden = false; document.body.classList.add("has-mini");
+    $("miniCode").textContent = n ? n.code : "📺";
+    $("miniTitle").textContent = n ? n.title : "Control de la tele";
+    $("miniArtist").textContent = n ? n.artist : (st ? (st.queue.length + " en la fila") : "Conectando…");
+    $("miniPlay").textContent = st && st.playing ? "❚❚" : "▶";
+  }
+  function renderQueueRemote() {
+    const ul = $("queue"); ul.innerHTML = "";
+    const q = remoteState ? remoteState.queue : [];
+    if (!q.length) ul.innerHTML = '<li class="empty" style="display:block;background:none">La fila de la tele está vacía. Elegí un tema.</li>';
+    q.forEach(it => {
+      const li = document.createElement("li");
+      li.innerHTML = '<span class="c"></span><span class="n"></span><span></span>';
+      li.querySelector(".c").textContent = it.code; li.querySelector(".n").textContent = it.title + (it.artist ? " · " + it.artist : "");
+      ul.appendChild(li);
+    });
+    $("qCount").textContent = q.length + (remoteState && remoteState.more ? "+" + remoteState.more : "");
+  }
+  if (REMOTE) {
+    document.body.classList.add("remote");
+    listen(topicTv, m => { if (m.t === "state") { remoteState = m; updateNowRemote(); renderQueueRemote(); } }, () => sendCmd({ t: "hello" }));
+  }
+
+  /* ---------- Modo TV ---------- */
+  const TVKEY = "rockola-modo-tv";
+  const looksTV = /\b(SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|BRAVIA|AFT[A-Z0-9]|Android TV|GoogleTV|CrKey|HbbTV|Roku|VIDAA)\b/i.test(navigator.userAgent);
+  let tvOn = false;
+  try { const v = localStorage.getItem(TVKEY); tvOn = v === null ? looksTV : v === "1"; } catch (e) { tvOn = looksTV; }
+  if (/[?&]tv\b/.test(location.search)) tvOn = true;
+  if (REMOTE) tvOn = false;
+  function setTV(on, remember) {
+    tvOn = on; document.body.classList.toggle("tv", on);
+    $("tvBtn").textContent = on ? "✕ Salir de modo TV" : "📺 Modo TV";
+    if (remember) try { localStorage.setItem(TVKEY, on ? "1" : "0"); } catch (e) {}
+    if (on) { tvFocusStart(); window.__rockolaDrawQR && window.__rockolaDrawQR(); }
+  }
+  function tvFocusStart() {
+    setTimeout(() => {
+      if (!tvOn || (document.activeElement && document.activeElement !== document.body)) return;
+      const f = document.querySelector(".selp .strip") || $("play"); f && f.focus({ preventScroll: true });
+    }, 60);
+  }
+  $("tvBtn").addEventListener("click", () => setTV(!tvOn, true));
+  setTV(tvOn, false);
+
+  // Navegación con las flechas del control remoto
+  const focusables = () => [...document.querySelectorAll("button, select, input, textarea, [tabindex='0']")]
+    .filter(el => !el.disabled && el.offsetParent !== null && !el.closest("[hidden]") && el.getBoundingClientRect().width > 0
+      && (!$("picker").hidden ? el.closest("#picker") : !el.closest("#picker")));
+  function moveFocus(dir) {
+    const cur = document.activeElement && document.activeElement !== document.body ? document.activeElement : null;
+    const list = focusables();
+    if (!cur || !list.includes(cur)) { (list.find(el => el.classList.contains("strip")) || list[0])?.focus(); return; }
+    const a = cur.getBoundingClientRect(), ax = a.left + a.width / 2, ay = a.top + a.height / 2;
+    let best = null, bestScore = Infinity;
+    list.forEach(el => {
+      if (el === cur) return;
+      const b = el.getBoundingClientRect(), bx = b.left + b.width / 2, by = b.top + b.height / 2;
+      const dx = bx - ax, dy = by - ay;
+      let main, cross;
+      if (dir === "ArrowRight") { if (b.left < a.right - 4) return; main = dx; cross = Math.abs(dy); }
+      if (dir === "ArrowLeft") { if (b.right > a.left + 4) return; main = -dx; cross = Math.abs(dy); }
+      if (dir === "ArrowDown") { if (b.top < a.bottom - 4) return; main = dy; cross = Math.abs(dx); }
+      if (dir === "ArrowUp") { if (b.bottom > a.top + 4) return; main = -dy; cross = Math.abs(dx); }
+      const score = main + cross * 2.5;
+      if (score < bestScore) { bestScore = score; best = el; }
+    });
+    if (best) { best.focus({ preventScroll: true }); best.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" }); }
+  }
+  window.addEventListener("keydown", e => {
+    const k = e.key;
+    if (k === "MediaPlayPause" || k === "MediaPlay" || k === "MediaPause" || e.keyCode === 179 || e.keyCode === 415 || e.keyCode === 19) { e.preventDefault(); $("play").click(); return; }
+    if (k === "MediaTrackNext" || k === "MediaFastForward" || e.keyCode === 176 || e.keyCode === 417) { e.preventDefault(); $("skip").click(); return; }
+    if (!tvOn) return;
+    if ((k === "Escape" || k === "Backspace" || k === "GoBack" || e.keyCode === 10009 || e.keyCode === 461) && !$("picker").hidden) { e.preventDefault(); closePicker(); return; }
+    if (!/^Arrow(Up|Down|Left|Right)$/.test(k)) return;
+    const t = document.activeElement;
+    if (t && t.tagName === "SELECT" && (k === "ArrowUp" || k === "ArrowDown")) return;
+    if (t && /INPUT|TEXTAREA/.test(t.tagName) && (k === "ArrowLeft" || k === "ArrowRight")) return;
+    e.preventDefault(); moveFocus(k);
+  }, true);
 
   /* ---------- App instalable ---------- */
   if ("serviceWorker" in navigator && location.protocol === "https:") {
@@ -1183,11 +1440,12 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
   });
 
   $("play").addEventListener("click", () => {
+    if (REMOTE) { sendCmd({ t: "toggle" }); return; }
     if (current === null) { if (!queue.length && lib.length) queue.push(lib[Math.floor(Math.random() * lib.length)].id); playNext(); return; }
     if (!ready) return;
     if (playing) player.pauseVideo(); else player.playVideo();
   });
-  $("skip").addEventListener("click", playNext);
+  $("skip").addEventListener("click", () => { if (REMOTE) sendCmd({ t: "skip" }); else playNext(); });
   $("rand").addEventListener("click", () => {
     const pool = lib.filter(x => inCat(x, activeCat));
     if (pool.length) enqueue(pool[Math.floor(Math.random() * pool.length)].id); else toast("No hay temas en esta categoría");
@@ -1196,7 +1454,7 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
   $("picker").addEventListener("click", e => { if (e.target === $("picker")) closePicker(); });
   $("pickCreate").addEventListener("click", createCat);
   $("pickNew").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); createCat(); } if (e.key === "Escape") closePicker(); });
-  $("clear").addEventListener("click", () => { queue = []; renderAll(); toast("Fila vacía"); });
+  $("clear").addEventListener("click", () => { if (REMOTE) { sendCmd({ t: "clear" }); return; } queue = []; renderAll(); toast("Fila vacía"); });
   $("volume").addEventListener("input", e => { if (ready) player.setVolume(+e.target.value); });
 
   window.addEventListener("keydown", e => {
@@ -1235,6 +1493,7 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
 
   queue = lib.slice(0, 2).map(s => s.id);
   renderAll();
+  tvFocusStart();
   ghLoad();
 })();
 </script>
