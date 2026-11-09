@@ -471,7 +471,7 @@ body.tv .filter { height: auto; }
 .phonebox .plink { font-family: var(--f-strip); color: var(--amber); overflow-wrap: anywhere; font-size: 14px; }
 body.tv .phonebox .ptxt { font-size: 18px; }
 body.tv .phonebox strong { font-size: 22px; }
-body.remote .screenbox, body.remote .time, body.remote .bar, body.remote .tvbtn, body.remote #phoneBtn, body.remote .phonebox, body.remote .install { display: none !important; }
+body.remote #ytPrem, body.remote .screenbox, body.remote .time, body.remote .bar, body.remote .tvbtn, body.remote #phoneBtn, body.remote .phonebox, body.remote .install { display: none !important; }
 body.remote .stripwrap .del, body.remote .tagbtn, body.remote .notv, body.remote .ghstate, body.remote #ghBox, body.remote .res .add, body.remote .cat.new { display: none !important; }
 .remotebar { display: none; }
 body.remote .remotebar { display: block; background: var(--teal); color: #062521; font-weight: 700; text-align: center; padding: 8px 12px; border-radius: 10px; margin-bottom: 14px; letter-spacing: .03em; }
@@ -574,6 +574,7 @@ body.remote .remotebar { display: block; background: var(--teal); color: #062521
         <button class="btn big" id="play">▶ Tocar</button>
         <button class="btn" id="skip">⏭ Siguiente</button>
         <button class="btn" id="rand">Al azar</button>
+        <button class="btn" id="ytPrem" type="button" title="Abre la lista en la app de YouTube, sin comerciales si tenés Premium">▶ YouTube Premium</button>
         <button class="btn notv" id="phoneBtn" type="button">📱 Celulares</button>
         <label class="vol" for="volume">Vol <input type="range" id="volume" min="0" max="100" step="1" value="80"></label>
       </div>
@@ -1446,6 +1447,17 @@ body.remote .remotebar { display: block; background: var(--teal); color: #062521
     if (playing) player.pauseVideo(); else player.playVideo();
   });
   $("skip").addEventListener("click", () => { if (REMOTE) sendCmd({ t: "skip" }); else playNext(); });
+  // Abre la lista (lo que suena + la cola) en la app/sitio oficial de YouTube, donde vale la cuenta Premium.
+  $("ytPrem").addEventListener("click", () => {
+    let ids = (current !== null ? [current] : []).concat(queue.filter(q => q !== current));
+    if (!ids.length) ids = lib.map(s => s.id);
+    ids = ids.slice(0, 50);
+    if (!ids.length) { toast("Elegí algún tema primero"); return; }
+    try { player && player.pauseVideo && player.pauseVideo(); } catch (e) {}
+    const url = ids.length === 1 ? "https://www.youtube.com/watch?v=" + ids[0] : "https://www.youtube.com/watch_videos?video_ids=" + ids.join(",");
+    toast("Abriendo YouTube con " + ids.length + (ids.length === 1 ? " tema" : " temas"));
+    if (/RockolaApp/.test(navigator.userAgent)) location.href = url; else window.open(url, "_blank");
+  });
   $("rand").addEventListener("click", () => {
     const pool = lib.filter(x => inCat(x, activeCat));
     if (pool.length) enqueue(pool[Math.floor(Math.random() * pool.length)].id); else toast("No hay temas en esta categoría");
