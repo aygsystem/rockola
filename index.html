@@ -384,6 +384,20 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
 .pickcard .row { display: flex; gap: 8px; }
 .pickcard input { flex: 1; min-width: 0; background: #081011; color: var(--paper); border: 2px solid var(--chrome-lo); border-radius: 8px; padding: 8px 10px; font: 15px var(--f-strip); }
 .pickcard input:focus { border-color: var(--amber); outline: none; }
+.selrow { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.sel { flex: 1 1 160px; min-width: 0; display: grid; gap: 3px; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.sel select { width: 100%; background: #081011; color: var(--paper); border: 2px solid var(--chrome-lo); border-radius: 8px; padding: 7px 8px; font: 15px var(--f-strip); text-transform: none; letter-spacing: 0; }
+.sel select:focus { border-color: var(--amber); outline: none; }
+.abc { display: grid; grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); gap: 4px; margin-bottom: 10px; }
+.abc button { border: 0; border-radius: 5px; padding: 5px 0; background: #1f2a2a; color: var(--paper); font-weight: 700; font-size: 15px; }
+.abc button.all { grid-column: span 2; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+.abc button[aria-pressed="true"] { background: var(--amber); color: var(--ink); }
+.abc button:disabled { opacity: .25; cursor: default; }
+.editf { display: grid; gap: 6px; }
+.editf label, .pklbl { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.editf input { width: 100%; background: #081011; color: var(--paper); border: 2px solid var(--chrome-lo); border-radius: 8px; padding: 8px 10px; font: 15px var(--f-strip); }
+.editf input:focus { border-color: var(--amber); outline: none; }
+.editf .btn { justify-self: start; margin-top: 4px; }
 .filter { width: 100%; margin-bottom: 10px; font-size: 15px; padding: 7px 10px; }
 </style>
 </head>
@@ -444,6 +458,15 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
         <button class="linkbtn" type="button" id="tokOff">Desconectar este navegador</button>
       </div>
       <div class="cats" id="cats" role="group" aria-label="Categorías"></div>
+      <div class="selrow">
+        <label class="sel" for="artSel"><span>Artista o grupo</span><select id="artSel"></select></label>
+        <label class="sel" for="sortSel"><span>Ordenar</span><select id="sortSel">
+          <option value="add">Como los agregué</option>
+          <option value="title">A–Z por tema</option>
+          <option value="artist">A–Z por artista</option>
+        </select></label>
+      </div>
+      <div class="abc" id="abc" role="group" aria-label="Letra inicial"></div>
       <input type="search" class="filter" id="filter" placeholder="Filtrar mi lista por tema o artista" autocomplete="off">
       <div class="strips" id="strips"></div>
       <div class="adder">
@@ -492,6 +515,13 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
 <div class="picker" id="picker" hidden>
   <div class="pickcard" role="dialog" aria-modal="true" aria-labelledby="pickTitle">
     <div class="pickhead"><strong id="pickTitle">Categoría</strong><button type="button" class="pickx" id="pickClose" aria-label="Cerrar">✕</button></div>
+    <div class="editf" id="editBox">
+      <label for="edTitle">Tema</label><input type="text" id="edTitle" autocomplete="off">
+      <label for="edArtist">Artista o grupo</label><input type="text" id="edArtist" autocomplete="off" list="artList">
+      <datalist id="artList"></datalist>
+      <button class="btn" type="button" id="edSave">Guardar nombre</button>
+    </div>
+    <div class="pklbl" id="pickLbl">Categoría</div>
     <div class="cats" id="pickList"></div>
     <div class="row"><input type="text" id="pickNew" placeholder="Nueva categoría (ej: Cuarteto)" maxlength="24" autocomplete="off"><button class="btn" type="button" id="pickCreate">Crear</button></div>
   </div>
@@ -867,7 +897,9 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
   function openPicker(id) {
     pickFor = id;
     const s0 = id ? byId(id) : null;
-    $("pickTitle").textContent = s0 ? "Categoría de “" + s0.title + "”" : "Crear una categoría nueva";
+    $("pickTitle").textContent = s0 ? "Editar tema" : "Crear una categoría nueva";
+    $("editBox").hidden = !s0; $("pickLbl").hidden = !s0;
+    if (s0) { $("edTitle").value = s0.title; $("edArtist").value = s0.artist; }
     const box = $("pickList"); box.innerHTML = "";
     if (s0) {
       allCats().forEach(c => {
@@ -882,6 +914,13 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
     $("picker").hidden = false;
     (s0 ? box.querySelector("button") : $("pickNew"))?.focus();
   }
+  $("edSave").addEventListener("click", () => {
+    const x = pickFor && byId(pickFor); if (!x) return;
+    const t = $("edTitle").value.trim(), a = $("edArtist").value.trim();
+    if (!t) { toast("El tema necesita un nombre"); return; }
+    x.title = t; x.artist = a || "Sin artista";
+    save(); renderAll(); closePicker(); toast("Nombre guardado");
+  });
   function closePicker() { $("picker").hidden = true; pickFor = null; }
   function assignCat(c) {
     const x = pickFor && byId(pickFor);
@@ -897,11 +936,60 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
     if (pickFor) assignCat(name); else { closePicker(); setCat(name); toast("Categoría " + name + " creada. Lo que guardes ahora va ahí."); }
   }
 
+  /* ---------- Artista, orden y letras ---------- */
+  const SKEY = "rockola-orden";
+  let artFilter = "", letter = "", sortBy = "add";
+  try { sortBy = localStorage.getItem(SKEY) || "add"; } catch (e) {}
+  const artKey = a => norm(a).replace(/\s+(official|oficial|vevo|music|tv)$/i, "").replace(/ - topic$/, "");
+  const sortKey = t => norm(t).replace(/^(the|los|las|la|el)\s+/, "").replace(/^[^a-z0-9]+/, "");
+  const initial = t => { const c = sortKey(t).charAt(0).toUpperCase(); return /[A-Z]/.test(c) ? c : "#"; };
+  function artistsIn(list) {
+    const m = new Map();
+    list.forEach(x => { const k = artKey(x.artist); if (!m.has(k)) m.set(k, { name: x.artist, n: 0 }); m.get(k).n++; });
+    return [...m.entries()].sort((a, b) => a[1].name.localeCompare(b[1].name, "es"));
+  }
+  function renderArtists() {
+    const sel = $("artSel"), pool = lib.filter(x => inCat(x, activeCat));
+    const arts = artistsIn(pool);
+    if (artFilter && !arts.some(([k]) => k === artFilter)) artFilter = "";
+    sel.innerHTML = "";
+    const o0 = document.createElement("option"); o0.value = ""; o0.textContent = "Todos (" + arts.length + ")"; sel.appendChild(o0);
+    arts.forEach(([k, v]) => { const o = document.createElement("option"); o.value = k; o.textContent = v.name + " (" + v.n + ")"; sel.appendChild(o); });
+    sel.value = artFilter;
+    const dl = $("artList"); dl.innerHTML = "";
+    artistsIn(lib).forEach(([, v]) => { const o = document.createElement("option"); o.value = v.name; dl.appendChild(o); });
+  }
+  const letterOf = x => initial(sortBy === "title" ? x.title : x.artist);
+  function renderAbc(pool) {
+    const box = $("abc"); box.innerHTML = "";
+    const have = new Set(pool.map(letterOf));
+    if (letter && !have.has(letter)) letter = "";
+    const all = document.createElement("button"); all.type = "button"; all.className = "all"; all.textContent = "Todas";
+    all.setAttribute("aria-pressed", !letter); all.addEventListener("click", () => { letter = ""; renderStrips(); });
+    box.appendChild(all);
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split("").forEach(L => {
+      const b = document.createElement("button"); b.type = "button"; b.textContent = L;
+      b.disabled = !have.has(L); b.setAttribute("aria-pressed", letter === L);
+      b.title = (sortBy === "title" ? "Temas" : "Artistas") + " que empiezan con " + L;
+      b.addEventListener("click", () => { letter = letter === L ? "" : L; renderStrips(); });
+      box.appendChild(b);
+    });
+  }
+  $("artSel").addEventListener("change", e => { artFilter = e.target.value; letter = ""; renderStrips(); });
+  $("sortSel").addEventListener("change", e => { sortBy = e.target.value; letter = ""; try { localStorage.setItem(SKEY, sortBy); } catch (err) {} renderStrips(); });
+
   function renderStrips() {
     const box = $("strips"); box.innerHTML = "";
     const f = norm($("filter").value);
-    lib.forEach((s, i) => {
-      if (!inCat(s, activeCat)) return;
+    renderArtists();
+    $("sortSel").value = sortBy;
+    let rows = lib.map((s, i) => [s, i]).filter(([s]) => inCat(s, activeCat) && (!artFilter || artKey(s.artist) === artFilter));
+    renderAbc(rows.map(r => r[0]));
+    const cmp = (x, y) => sortKey(x).localeCompare(sortKey(y), "es");
+    if (sortBy === "title") rows.sort((a, b) => cmp(a[0].title, b[0].title));
+    if (sortBy === "artist") rows.sort((a, b) => cmp(a[0].artist, b[0].artist) || cmp(a[0].title, b[0].title));
+    rows.forEach(([s, i]) => {
+      if (letter && letterOf(s) !== letter) return;
       if (f && !norm(s.title + " " + s.artist).includes(f)) return;
       const w = document.createElement("div"); w.className = "stripwrap";
       const b = document.createElement("button");
@@ -913,7 +1001,7 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
       b.addEventListener("click", () => enqueue(s.id));
       const d = document.createElement("button"); d.className = "del"; d.textContent = "✕"; d.setAttribute("aria-label", "Sacar " + s.title + " de la rockola");
       d.addEventListener("click", () => { lib.splice(i, 1); queue = queue.filter(q => q !== s.id); save(); renderAll(); toast("Se sacó " + s.title); });
-      const tg = document.createElement("button"); tg.className = "tagbtn" + (s.cat ? " has" : ""); tg.textContent = s.cat || "＋ categoría";
+      const tg = document.createElement("button"); tg.className = "tagbtn" + (s.cat ? " has" : ""); tg.textContent = s.cat || "✎ editar";
       tg.setAttribute("aria-label", "Cambiar categoría de " + s.title);
       tg.addEventListener("click", () => openPicker(s.id));
       w.append(b, d, tg); box.appendChild(w);
