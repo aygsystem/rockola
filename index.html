@@ -3,7 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>La Rockola · YouTube</title>
+<title>La Rockola</title>
+<meta name="theme-color" content="#140e0c">
+<meta name="description" content="Rockola de YouTube con tus temas, categorías y fila.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Rockola">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Courier+Prime:wght@400;700&family=Barlow+Condensed:wght@400;600;700&display=swap">
 <style>
@@ -398,6 +407,20 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
 .editf input { width: 100%; background: #081011; color: var(--paper); border: 2px solid var(--chrome-lo); border-radius: 8px; padding: 8px 10px; font: 15px var(--f-strip); }
 .editf input:focus { border-color: var(--amber); outline: none; }
 .editf .btn { justify-self: start; margin-top: 4px; }
+.mini { position: fixed; left: 0; right: 0; bottom: 0; z-index: 15; display: flex; gap: 8px; align-items: center;
+  background: linear-gradient(180deg, #3a2016, #1d0f0b); border-top: 3px solid var(--chrome);
+  box-shadow: 0 -8px 24px rgba(0,0,0,.5);
+  padding: 8px max(12px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); }
+.mini-info { flex: 1; min-width: 0; border: 0; background: none; display: flex; gap: 10px; align-items: center; text-align: left; padding: 0; }
+.mini-code { font-weight: 700; font-size: 20px; color: var(--amber); text-shadow: 0 0 8px var(--amber); min-width: 34px; }
+.mini-txt { min-width: 0; display: grid; }
+.mini-t { font-family: var(--f-strip); font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--paper); }
+.mini-a { font-size: 14px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-btn { border: 0; width: 46px; height: 46px; border-radius: 50%; font-size: 18px; background: linear-gradient(180deg, #eef0f2, var(--chrome) 45%, var(--chrome-lo)); color: var(--ink); flex: none; }
+.mini-btn.play { background: linear-gradient(180deg, #ff7b6f, var(--red) 55%, #9c2a22); color: #fff; }
+.install { position: fixed; right: max(12px, env(safe-area-inset-right, 0px)); top: calc(12px + env(safe-area-inset-top, 0px)); z-index: 16; border: 0; border-radius: 999px; padding: 8px 14px; background: var(--teal); color: #062521; font-weight: 700; letter-spacing: .04em; box-shadow: 0 6px 18px rgba(0,0,0,.4); }
+@media (min-width: 761px) { .mini { display: none !important; } }
+@media (max-width: 760px) { body.has-mini { padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px)); } .toast { bottom: calc(86px + env(safe-area-inset-bottom, 0px)); } }
 .filter { width: 100%; margin-bottom: 10px; font-size: 15px; padding: 7px 10px; }
 </style>
 </head>
@@ -478,7 +501,7 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
       <p class="hint">Para buscar por tema o artista usá el buscador de arriba. Acá podés pegar un link directo si ya lo tenés.</p>
     </section>
 
-    <section class="panel" aria-labelledby="now-h">
+    <section class="panel" aria-labelledby="now-h" id="nowPanel">
       <h2 id="now-h">Sonando ahora</h2>
       <div class="screenbox">
         <div class="idle" id="idle">Marcá un número o tocá ▶ para arrancar</div>
@@ -526,6 +549,15 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
     <div class="row"><input type="text" id="pickNew" placeholder="Nueva categoría (ej: Cuarteto)" maxlength="24" autocomplete="off"><button class="btn" type="button" id="pickCreate">Crear</button></div>
   </div>
 </div>
+<div class="mini" id="mini" hidden>
+  <button type="button" class="mini-info" id="miniInfo" aria-label="Ver el reproductor">
+    <span class="mini-code" id="miniCode"></span>
+    <span class="mini-txt"><span class="mini-t" id="miniTitle"></span><span class="mini-a" id="miniArtist"></span></span>
+  </button>
+  <button type="button" class="mini-btn play" id="miniPlay" aria-label="Tocar o pausar">▶</button>
+  <button type="button" class="mini-btn" id="miniSkip" aria-label="Siguiente">⏭</button>
+</div>
+<button type="button" class="install" id="installBtn" hidden>📲 Instalar la app</button>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -690,7 +722,9 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
   let queue = [];        // guarda ids de video
   let current = null;    // id de video
   let entry = "";
-  const code = i => String.fromCharCode(65 + Math.floor(i / 6)) + (i % 6 + 1);
+  // Códigos tipo rockola: letra A–Z + número. Cada letra tiene 6 temas; si no alcanza, 9; si tampoco, hasta 99.
+  const per = () => lib.length <= 156 ? 6 : lib.length <= 234 ? 9 : 99;
+  const code = i => String.fromCharCode(65 + Math.floor(i / per())) + (i % per() + 1);
   const idxOf = id => lib.findIndex(s => s.id === id);
   const byId = id => lib[idxOf(id)];
 
@@ -1027,23 +1061,35 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
   }
   function renderKeys() {
     const k = $("keys"); k.innerHTML = "";
-    const letters = Math.max(1, Math.ceil(lib.length / 6));
+    const P = per(), letters = Math.min(26, Math.max(1, Math.ceil(lib.length / P)));
     for (let L = 0; L < letters; L++) {
       const b = document.createElement("button"); b.className = "l"; b.textContent = String.fromCharCode(65 + L);
       b.addEventListener("click", () => press(b.textContent)); k.appendChild(b);
     }
-    for (let n = 1; n <= 6; n++) { const b = document.createElement("button"); b.textContent = n; b.addEventListener("click", () => press(String(n))); k.appendChild(b); }
+    const digits = P === 6 ? "123456" : P === 9 ? "123456789" : "1234567890";
+    digits.split("").forEach(n => { const b = document.createElement("button"); b.textContent = n; b.addEventListener("click", () => press(n)); k.appendChild(b); });
+    if (P === 99) { const ok = document.createElement("button"); ok.className = "l"; ok.textContent = "OK"; ok.addEventListener("click", () => press("OK")); k.appendChild(ok); }
   }
   function renderAll() { renderCats(); renderStrips(); renderQueue(); renderKeys(); updateNow(); }
 
   function press(ch) {
-    if (/[A-Z]/.test(ch)) entry = ch;
+    const P = per();
+    const go = () => {
+      const c = entry; entry = "";
+      const n = parseInt(c.slice(1), 10);
+      const i = (c.charCodeAt(0) - 65) * P + (n - 1);
+      if (!n || n > P || i < 0 || i >= lib.length) toast("No hay tema en " + c); else enqueue(lib[i].id);
+    };
+    if (ch === "OK") { if (entry.length > 1) go(); }
+    else if (/^[A-Z]$/.test(ch)) entry = ch;
     else if (entry) {
-      const c = entry + ch; entry = "";
-      const i = (c.charCodeAt(0) - 65) * 6 + (+ch - 1);
-      if (i < 0 || i >= lib.length) toast("No hay tema en " + c); else enqueue(lib[i].id);
+      if (entry.length === 1 && ch === "0") { toast("El número empieza en 1"); }
+      else {
+        entry += ch;
+        if (P < 10 || entry.length === 3) go();
+      }
     } else toast("Primero marcá una letra");
-    $("screen").textContent = entry ? entry + " _" : "_ _";
+    $("screen").textContent = entry ? entry + (P === 99 && entry.length < 3 ? " _" : "") : "_ _";
   }
 
   /* ---------- YouTube ---------- */
@@ -1079,7 +1125,7 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
     if (current === null) playNext(); else { renderQueue(); renderStrips(); }
   }
   function playNext() {
-    if (!ready) { pendingPlay = true; toast("Cargando YouTube…"); return; }
+    if (!ready) { pendingPlay = true; renderQueue(); renderStrips(); updateNow(); toast("Cargando YouTube…"); return; }
     if (!queue.length) {
       current = null; player.stopVideo(); renderAll(); return;
     }
@@ -1094,7 +1140,30 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
     $("nowTitle").textContent = s ? s.title : (queue.length ? "Tocá ▶ para arrancar" : "Elegí un tema");
     $("nowArtist").textContent = s ? s.artist : "Tocá un cartelito o usá la botonera";
     $("play").textContent = playing ? "❚❚ Pausa" : "▶ Tocar";
+    const showMini = !!s || queue.length > 0;
+    $("mini").hidden = !showMini; document.body.classList.toggle("has-mini", showMini);
+    $("miniCode").textContent = s ? code(idxOf(current)) : "▶";
+    $("miniTitle").textContent = s ? s.title : "Tocá ▶ para arrancar";
+    $("miniArtist").textContent = s ? s.artist : queue.length + (queue.length === 1 ? " tema en la fila" : " temas en la fila");
+    $("miniPlay").textContent = playing ? "❚❚" : "▶";
   }
+  $("miniPlay").addEventListener("click", () => $("play").click());
+  $("miniSkip").addEventListener("click", () => $("skip").click());
+  $("miniInfo").addEventListener("click", () => $("nowPanel").scrollIntoView({ behavior: "smooth", block: "start" }));
+
+  /* ---------- App instalable ---------- */
+  if ("serviceWorker" in navigator && location.protocol === "https:") {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
+  let installEvt = null;
+  window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; $("installBtn").hidden = false; });
+  $("installBtn").addEventListener("click", async () => {
+    if (!installEvt) return;
+    installEvt.prompt();
+    try { await installEvt.userChoice; } catch (e) {}
+    installEvt = null; $("installBtn").hidden = true;
+  });
+  window.addEventListener("appinstalled", () => { $("installBtn").hidden = true; toast("¡Listo! La Rockola quedó instalada"); });
 
   setInterval(() => {
     if (!ready || current === null || !player.getDuration) return;
@@ -1133,8 +1202,9 @@ canvas#viz { width: 100%; height: 64px; display: block; margin-top: 14px; border
   window.addEventListener("keydown", e => {
     if (/INPUT|TEXTAREA/.test(e.target.tagName)) return;
     const k = e.key.toUpperCase();
-    if (/^[A-Z]$/.test(k) && k.charCodeAt(0) - 65 < Math.ceil(lib.length / 6)) press(k);
-    else if (/^[1-6]$/.test(k)) press(k);
+    if (/^[A-Z]$/.test(k) && k.charCodeAt(0) - 65 < Math.ceil(lib.length / per())) press(k);
+    else if (/^[0-9]$/.test(k) && (per() === 99 || (k !== "0" && +k <= per()))) press(k);
+    else if (e.key === "Enter" && entry) press("OK");
   });
 
   $("ghState").addEventListener("click", () => { $("ghBox").hidden = !$("ghBox").hidden; $("tokOff").hidden = !getTok(); });
