@@ -708,7 +708,6 @@ body.remote .remotebar { display: block; background: var(--teal); color: #062521
           lib = merged;
           try { localStorage.setItem(KEY, JSON.stringify(lib)); } catch (e) {}
           queue = queue.filter(id => idxOf(id) >= 0);
-          if (!queue.length && current === null) queue = lib.slice(0, 2).map(s => s.id);
           renderAll(); renderResults();
           if (typeof tvFocusStart === "function") tvFocusStart();
         }
@@ -1503,7 +1502,7 @@ body.remote .remotebar { display: block; background: var(--teal); color: #062521
   });
   $("tokOff").addEventListener("click", () => { try { localStorage.removeItem(TKEY); } catch (e) {} $("ghBox").hidden = true; ghRefreshStatus(); toast("Este navegador ya no graba en GitHub"); });
 
-  queue = lib.slice(0, 2).map(s => s.id);
+  queue = [];
   renderAll();
   tvFocusStart();
   ghLoad();
